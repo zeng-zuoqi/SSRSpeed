@@ -29,6 +29,18 @@ class SSR(object):
 		else:
 			return "Unknown"
 
+	def __ssrWinConf(self):
+		with open("./shadowsocksr-win/gui-config.json","r",encoding="utf-8") as f:
+			tmpConf = json.loads(f.read())
+			f.close()
+		tmpConf["localPort"] = self.__config["local_port"]
+		for key in tmpConf["configs"][0].keys():
+			if (self.__config.__contains__(key)):
+				tmpConf["configs"][0][key] = self.__config[key]
+		with open("./shadowsocksr-win/gui-config.json","w+",encoding="utf-8") as f:
+			f.write(json.dumps(tmpConf))
+			f.close()
+
 	def startSsr(self,config):
 		self.__config = config
 		self.__config["server_port"] = int(self.__config["server_port"])
@@ -37,11 +49,8 @@ class SSR(object):
 			f.close()
 		if (self.__process == None):
 			if (self.__checkPlatform() == "Windows"):
-				if (logger.level == logging.DEBUG):
-					print("DEBUG")
-					self.__process = subprocess.Popen(["python","./shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()])
-				else:
-					self.__process = subprocess.Popen(["python","./shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+				self.__ssrWinConf()
+				self.__process = subprocess.Popen(["./shadowsocksr-win/ShadowsocksR-dotnet4.0.exe"])
 			elif(self.__checkPlatform() == "Linux"):
 				if (logger.level == logging.DEBUG):
 					self.__process = subprocess.Popen(["python3","./shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()])

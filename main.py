@@ -50,7 +50,7 @@ def setOpts(parser):
 		"-m","--method",
 		action="store",
 		dest="test_method",
-		default="speedtestnet",
+		default="socket",
 		help="Select test method in [speedtestnet,fast,cachefly,socket]"
 		)
 	parser.add_option(
@@ -170,8 +170,6 @@ if (__name__ == "__main__"):
 
 	if (logger.level == logging.DEBUG):
 		logger.debug("Program running in debug mode")
-	
-	setInfo(LOCAL_ADDRESS,LOCAL_PORT)
 
 	#print(options.test_method)
 	if (options.test_method == "speedtestnet"):
@@ -261,12 +259,16 @@ if (__name__ == "__main__"):
 	retryMode = False
 #	exit(0)
 
+	port = 1087
 	ssr = SSR()
 	config = ssrp.getNextConfig()
 	while(True):
+		port += 1
+		setInfo(LOCAL_ADDRESS,port)
 		_item = {}
 		_item["group"] = config["group"]
 		_item["remarks"] = config["remarks"]
+		config["local_port"] = port
 		config["server_port"] = int(config["server_port"])
 		ssr.startSsr(config)
 		logger.info("Starting test for %s - %s" % (_item["group"],_item["remarks"]))
@@ -278,10 +280,9 @@ if (__name__ == "__main__"):
 			#_thread.start_new_thread(socks2httpServer.serve_forever,())
 			#logger.debug("socks2http server started.")
 			_item["dspeed"] = st.startTest(TEST_METHOD)
-			time.sleep(0.2)
+			time.sleep(1)
 			ssr.stopSsr()
-			time.sleep(0.2)
-			ssr.startSsr(config)
+			time.sleep(1)
 		#	.print (latencyTest)
 			_item["loss"] = 1 - latencyTest[1]
 			_item["ping"] = latencyTest[0]
