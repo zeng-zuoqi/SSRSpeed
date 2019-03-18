@@ -52,7 +52,11 @@ def speedTestThread():
 		return 0
 
 def speedTestSocket(port):
-	global EXIT_FLAG,LOCAL_PORT,MAX_TIME
+	global EXIT_FLAG,LOCAL_PORT,MAX_TIME,TOTAL_RECEIVED
+	logger.debug("Actived threads: %d" % threading.active_count())
+	MAX_TIME = 0
+	TOTAL_RECEIVED = 0
+	EXIT_FLAG = False
 	LOCAL_PORT = port
 	socks.set_default_proxy(socks.SOCKS5,"127.0.0.1",LOCAL_PORT)
 	socket.socket = socks.socksocket

@@ -17,8 +17,10 @@ TIMEOUT = 10
 
 class SSR(object):
 	def __init__(self):
+		self.__configList = []
 		self.__config = {}
 		self.__process = None
+		self.__ssrAuth = ""
 
 	def __checkPlatform(self):
 		tmp = platform.platform()
@@ -33,33 +35,67 @@ class SSR(object):
 		with open("./shadowsocksr-win/gui-config.json","r",encoding="utf-8") as f:
 			tmpConf = json.loads(f.read())
 			f.close()
-		tmpConf["localPort"] = self.__config["local_port"]
-		for key in tmpConf["configs"][0].keys():
-			if (self.__config.__contains__(key)):
-				tmpConf["configs"][0][key] = self.__config[key]
+		self.__ssrAuth = tmpConf["localAuthPassword"]
+		tmpConf["token"]["SpeedTest"] = "SpeedTest"
+		tmpConf["localPort"] = LOCAL_PORT
+		tmpConf["index"] = 0
+		tmpConf["configs"] = []
+		for iitem in self.__configList:
+			iitem["protocolparam"] = iitem["protocol_param"]
+			iitem["obfsparam"] = iitem["obfs_param"]
+			tmpConf["configs"].append(iitem)
 		with open("./shadowsocksr-win/gui-config.json","w+",encoding="utf-8") as f:
 			f.write(json.dumps(tmpConf))
 			f.close()
 
-	def startSsr(self,config):
-		self.__config = config
-		self.__config["server_port"] = int(self.__config["server_port"])
-		with open("./config.json","w+",encoding="utf-8") as f:
-			f.write(json.dumps(self.__config))
-			f.close()
+	def getCurrrentConfig(self):
+		param = {
+			"app":"SpeedTest",
+			"token":"SpeedTest",
+			"action":"curConfig"
+		}
+		rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param)
+		if (rep.status_code == 200):
+			logger.debug(rep.content)
+			return rep.json()
+		else:
+			return False
+
+	def nextWinConf(self):
+		param = {
+			"app":"SpeedTest",
+			"token":"SpeedTest",
+			"action":"nextConfig"
+		}
+		rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param)
+		if (rep.status_code == 403):
+			return False
+		else:
+			return True
+
+	def addConfig(self,configList):
+		self.__configList = configList
+
+	def startSsr(self,config = {}):
 		if (self.__process == None):
 			if (self.__checkPlatform() == "Windows"):
 				self.__ssrWinConf()
-				self.__process = subprocess.Popen(["./shadowsocksr-win/ShadowsocksR-dotnet4.0.exe"])
+				self.__process = subprocess.Popen(["./shadowsocksr-win/ShadowsocksR.exe"])
 			elif(self.__checkPlatform() == "Linux"):
+				self.__config = config
+				self.__config["server_port"] = int(self.__config["server_port"])
+				with open("./config.json","w+",encoding="utf-8") as f:
+					f.write(json.dumps(self.__config))
+					f.close()
 				if (logger.level == logging.DEBUG):
 					self.__process = subprocess.Popen(["python3","./shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()])
 				else:
 					self.__process = subprocess.Popen(["python3","./shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+				logger.info("Starting ShadowsocksR-Python with server %s:%d" % (config["server"],config["server_port"]))
 			else:
 				logger.error("Your system does not supported.Please contact developer.")
 				sys.exit(1)
-			logger.info("Starting ShadowsocksR with server %s:%d" % (config["server"],config["server_port"]))
+			
 
 		#	print(self.__process.returncode)
 
@@ -83,7 +119,7 @@ class SSRParse(object):
 		decoded2 = decoded.split("/?")[1].split("&")
 		_config = {
 			"server":decoded1[0],
-			"server_port":decoded1[1],
+			"server_port":int(decoded1[1]),
 			"method":decoded1[3],
 			"protocol":decoded1[2],
 			"obfs":decoded1[4],
@@ -93,11 +129,12 @@ class SSRParse(object):
 			"remarks":"",
 			"group":""
 		}
+	#	logger.debug(decoded2)
 		for ii in decoded2:
 			if ("obfsparam" in ii):
 				_config["obfs_param"] = b64plus.decode(ii.split("=")[1]).decode("utf-8")
 				continue
-			elif ("protocolparam" in ii):
+			elif ("protocolparam" in ii or "protoparam" in ii):
 				_config["protocol_param"] = b64plus.decode(ii.split("=")[1]).decode("utf-8")
 				continue
 			elif ("remarks" in ii):
@@ -189,7 +226,7 @@ class SSRParse(object):
 			for item in json.load(f)["configs"]:
 				_dict = {
 					"server":item["server"],
-					"server_port":item["server_port"],
+					"server_port":int(item["server_port"]),
 					"password":item["password"],
 					"method":item["method"],
 					"protocol":item["protocol"],
@@ -207,6 +244,9 @@ class SSRParse(object):
 			f.close()
 
 		logger.info("Read %d node(s)" % len(self.__configList))
+
+	def getAllConfig(self):
+		return self.__configList
 
 	def getNextConfig(self):
 		if (self.__configList != []):

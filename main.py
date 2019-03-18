@@ -5,6 +5,7 @@ import traceback
 import sys
 import os
 import _thread
+import platform
 from optparse import OptionParser
 import logging
 
@@ -27,7 +28,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "1.0 stable"
+VERSION = "2.0 alpha"
 LOCAL_ADDRESS = "127.0.0.1"
 LOCAL_PORT = 1087
 
@@ -132,6 +133,15 @@ def export(Result,exType):
 	else:
 		logger.error("Unsupported export type %s" % exType)
 		exportAsJson(Result)
+
+def checkPlatform():
+		tmp = platform.platform()
+		if ("Windows" in tmp):
+			return "Windows"
+		elif("Linux" in tmp):
+			return "Linux"
+		else:
+			return "Unknown"
 
 if (__name__ == "__main__"):
 	#setUpstreamPort(LOCAL_PORT)
@@ -258,6 +268,42 @@ if (__name__ == "__main__"):
 	retryConfig = []
 	retryMode = False
 #	exit(0)
+	if (checkPlatform() == "Windows"):
+		configs = ssrp.getAllConfig()
+		ssr = SSR()
+		ssr.addConfig(configs)
+		ssr.startSsr()
+		setInfo(LOCAL_ADDRESS,LOCAL_PORT)
+		time.sleep(1)
+		while(True):
+			config = ssr.getCurrrentConfig()
+			_item = {}
+			_item["group"] = config["group"]
+			_item["remarks"] = config["remarks"]
+			logger.info("Starting test for %s - %s" % (config["group"],config["remarks"]))
+			time.sleep(1)
+			try:
+				st = SpeedTest()
+				latencyTest = st.tcpPing(config["server"],config["server_port"])
+				time.sleep(1)
+				_item["dspeed"] = st.startTest(TEST_METHOD)
+				time.sleep(1)
+				_item["loss"] = 1 - latencyTest[1]
+				_item["ping"] = latencyTest[0]
+				logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d - Speed:%.2f" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000),_item["dspeed"] / 1024 / 1024) + "MB")
+				Result.append(_item)
+			except:
+				logger.exception("")
+				ssr.stopSsr()
+			if (not ssr.nextWinConf()):
+				break
+			time.sleep(1)
+
+	export(Result,EXPORT_TYPE)
+	ssr.stopSsr()
+	sys.exit(0)
+
+
 
 	port = 1087
 	ssr = SSR()
@@ -333,8 +379,7 @@ if (__name__ == "__main__"):
 							break
 				break
 
-	export(Result,EXPORT_TYPE)
-	ssr.stopSsr()
+	
 	#if (socks2httpServer):
 		#socks2httpServer.shutdown()
 		#logger.debug("Socks2HTTP Server already shutdown.")
