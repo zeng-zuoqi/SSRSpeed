@@ -116,15 +116,23 @@ class SSRParse(object):
 
 	def __parseLink(self,link):
 		decoded = b64plus.decode(link).decode("utf-8")
-		decoded1 = decoded.split("/?")[0].split(":")
+		decoded1 = decoded.split("/?")[0].split(":")[::-1]
+		if (len(decoded1) != 6):
+			addr = ""
+			for i in range(5,len(decoded1) - 1):
+				addr += decoded1[i] + ":"
+			addr += decoded1[len(decoded1) - 1]
+			decoded1[5] = addr
 		decoded2 = decoded.split("/?")[1].split("&")
+	#	print(decoded1)
+	#	print(decoded2)
 		_config = {
-			"server":decoded1[0],
-			"server_port":int(decoded1[1]),
-			"method":decoded1[3],
-			"protocol":decoded1[2],
-			"obfs":decoded1[4],
-			"password":b64plus.decode(decoded1[5]).decode("utf-8"),
+			"server":decoded1[5],
+			"server_port":int(decoded1[4]),
+			"method":decoded1[2],
+			"protocol":decoded1[3],
+			"obfs":decoded1[1],
+			"password":b64plus.decode(decoded1[0]).decode("utf-8"),
 			"protocol_param":"",
 			"obfsparam":"",
 			"remarks":"",
@@ -212,7 +220,9 @@ class SSRParse(object):
 		header = {
 			"User-Agent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
 		}
-		rep = requests.get(url,headers = header).content.decode("utf-8")
+		rep = requests.get(url,headers = header)
+		rep.encoding = "utf-8"
+		rep = rep.content.decode("utf-8")
 		linksArr = (b64plus.decode(rep).decode("utf-8")).split("\n")
 		for link in linksArr:
 			link = link.strip()
