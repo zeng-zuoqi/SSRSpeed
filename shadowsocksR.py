@@ -55,8 +55,9 @@ class SSR(object):
 			"action":"curConfig"
 		}
 		rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param)
+		rep.encoding = "utf-8"
 		if (rep.status_code == 200):
-			logger.debug(rep.content)
+		#	logger.debug(rep.content)
 			return rep.json()
 		else:
 			return False
