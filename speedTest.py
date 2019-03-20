@@ -13,6 +13,7 @@ logger = logging.getLogger("Sub")
 import speedtestnet
 import fast
 import cachefly
+import stSocket
 
 
 LOCAL_ADDRESS = "127.0.0.1"
@@ -20,6 +21,7 @@ LOCAL_PORT = 1087
 DEFAULT_SOCKET = socket.socket
 
 def setInfo(ADDRESS,PORT):
+	global LOCAL_ADDRESS,LOCAL_PORT
 	LOCAL_ADDRESS = ADDRESS
 	LOCAL_PORT = PORT
 
@@ -38,7 +40,7 @@ class SpeedTest(object):
 	def __initSocket(self):
 		socket.socket = DEFAULT_SOCKET
 
-	def startTest(self,method = "CACHE_FLY"):
+	def startTest(self,method = "SOCKET"):
 		logger.info("Starting speed test with %s" % method)
 		if (method == "SPEED_TEST_NET"):
 			try:
@@ -68,15 +70,9 @@ class SpeedTest(object):
 			except:
 				logger.exception("")
 				return 0
-		elif (method == "CACHE_FLY"):
-			try:
-				return cachefly.speedtestcachefly(LOCAL_PORT)
-			except:
-				logger.exception("")
-				return 0
 		elif (method == "SOCKET"):#Old speedtest
 			try:
-				return cachefly.speedtestsocket(LOCAL_PORT)
+				return stSocket.speedTestSocket(LOCAL_PORT)
 			except:
 				logger.exception("")
 				return 0

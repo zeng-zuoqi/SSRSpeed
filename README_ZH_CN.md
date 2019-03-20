@@ -5,8 +5,7 @@ ShadowsocksR 批量测速工具
 
 ## 特点
 
- - Support SpeedTestNet, Fast.com,Cachefly and socket(removed).
- - 支持 Speedtestnet，Fast.com，Cachefly测速（原始Socket已移除）
+ - 支持 Speedtestnet，Fast.com，Socket下载测速
  - 支持导出结果为 json 和 png
  - 支持从ShadowsocksR-CSharp的配置文件（gui-config.json）导入或者从订阅链接导入（确认支持SSPanelv2,v3）
  - 支持从导出的json文件再次导入并导出为指定格式

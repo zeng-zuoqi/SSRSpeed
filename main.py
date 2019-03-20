@@ -5,6 +5,7 @@ import traceback
 import sys
 import os
 import _thread
+import platform
 from optparse import OptionParser
 import logging
 
@@ -27,7 +28,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "1.0 stable"
+VERSION = "2.0 beta"
 LOCAL_ADDRESS = "127.0.0.1"
 LOCAL_PORT = 1087
 
@@ -50,8 +51,8 @@ def setOpts(parser):
 		"-m","--method",
 		action="store",
 		dest="test_method",
-		default="speedtestnet",
-		help="Select test method in [speedtestnet,fast,cachefly,socket]"
+		default="socket",
+		help="Select test method in [speedtestnet,fast,socket]"
 		)
 	parser.add_option(
 		"--include",
@@ -123,6 +124,13 @@ def setOpts(parser):
 		default=False,
 		help="Run program in debug mode."
 		)
+	parser.add_option(
+		"--paolu",
+		action="store_true",
+		dest="paolu",
+		default=False,
+		help="如题"
+		)
 
 def export(Result,exType):
 	if (exType.lower() == "png"):
@@ -132,6 +140,15 @@ def export(Result,exType):
 	else:
 		logger.error("Unsupported export type %s" % exType)
 		exportAsJson(Result)
+
+def checkPlatform():
+		tmp = platform.platform()
+		if ("Windows" in tmp):
+			return "Windows"
+		elif("Linux" in tmp):
+			return "Linux"
+		else:
+			return "Unknown"
 
 if (__name__ == "__main__"):
 	#setUpstreamPort(LOCAL_PORT)
@@ -151,10 +168,16 @@ if (__name__ == "__main__"):
 	SKIP_COMFIRMATION = False
 	EXPORT_TYPE = ""
 
-	
 	parser = OptionParser(usage="Usage: %prog [options] arg1 arg2...",version="SSR Speed Tool " + VERSION)
 	setOpts(parser)
 	(options,args) = parser.parse_args()
+
+	if (options.paolu):
+		for root, dirs, files in os.walk(".", topdown=False):
+			for name in files:
+				os.remove(os.path.join(root, name))
+			for name in dirs:
+				os.rmdir(os.path.join(root, name))
 
 	if (options.debug):
 		DEBUG = options.debug
@@ -170,20 +193,14 @@ if (__name__ == "__main__"):
 
 	if (logger.level == logging.DEBUG):
 		logger.debug("Program running in debug mode")
-	
-	setInfo(LOCAL_ADDRESS,LOCAL_PORT)
 
 	#print(options.test_method)
 	if (options.test_method == "speedtestnet"):
 		TEST_METHOD = "SPEED_TEST_NET"
 	elif(options.test_method == "fast"):
 		TEST_METHOD = "FAST"
-	elif(options.test_method == "cachefly"):
-		TEST_METHOD = "CACHE_FLY"
 	else:
 		TEST_METHOD = "SOCKET"
-
-
 
 	if (options.confirmation):
 		SKIP_COMFIRMATION = options.confirmation
@@ -260,83 +277,111 @@ if (__name__ == "__main__"):
 	retryConfig = []
 	retryMode = False
 #	exit(0)
-
-	ssr = SSR()
-	config = ssrp.getNextConfig()
-	while(True):
-		_item = {}
-		_item["group"] = config["group"]
-		_item["remarks"] = config["remarks"]
-		config["server_port"] = int(config["server_port"])
-		ssr.startSsr(config)
-		logger.info("Starting test for %s - %s" % (_item["group"],_item["remarks"]))
+	if (checkPlatform() == "Windows"):
+		configs = ssrp.getAllConfig()
+		ssr = SSR()
+		ssr.addConfig(configs)
+		ssr.startSsr()
+		setInfo(LOCAL_ADDRESS,LOCAL_PORT)
 		time.sleep(1)
-		try:
-			st = SpeedTest()
-			latencyTest = st.tcpPing(config["server"],config["server_port"])
+		while(True):
+			config = ssr.getCurrrentConfig()
+			_item = {}
+			_item["group"] = config["group"]
+			_item["remarks"] = config["remarks"]
+			logger.info("Starting test for %s - %s" % (config["group"],config["remarks"]))
 			time.sleep(1)
-			#_thread.start_new_thread(socks2httpServer.serve_forever,())
-			#logger.debug("socks2http server started.")
-			_item["dspeed"] = st.startTest(TEST_METHOD)
-			time.sleep(0.2)
-			ssr.stopSsr()
-			time.sleep(0.2)
-			ssr.startSsr(config)
-		#	.print (latencyTest)
-			_item["loss"] = 1 - latencyTest[1]
-			_item["ping"] = latencyTest[0]
-		#	_item["gping"] = st.googlePing()
-			_item["gping"] = 0
-			if ((int(_item["dspeed"]) == 0) and (retryMode == False)):
-			#	retryList.append(_item)
+			try:
+				st = SpeedTest()
+				latencyTest = st.tcpPing(config["server"],config["server_port"])
+				time.sleep(1)
+				_item["dspeed"] = st.startTest(TEST_METHOD)
+				time.sleep(1)
+				_item["loss"] = 1 - latencyTest[1]
+				_item["ping"] = latencyTest[0]
+				logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d - Speed:%.2f" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000),_item["dspeed"] / 1024 / 1024) + "MB")
 				Result.append(_item)
-				retryConfig.append(config)
-			else:
-				Result.append(_item)
-			logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d - Google_Ping:%d - Speed:%.2f" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000),int(_item["gping"] * 1000),_item["dspeed"] / 1024 / 1024) + "MB")
-			#socks2httpServer.shutdown()
-			#logger.debug("Socks2HTTP Server already shutdown.")
-		except Exception:
-			ssr.stopSsr()
-			#socks2httpServer.shutdown()
-			#logger.debug("Socks2HTTP Server already shutdown.")
-			#traceback.print_exc()
-			logger.exception("")
-			sys.exit(1)
+			except:
+				logger.exception("")
+				ssr.stopSsr()
+			if (not ssr.nextWinConf()):
+				break
+			time.sleep(1)
+
+		export(Result,EXPORT_TYPE)
 		ssr.stopSsr()
-		if (retryMode):
-			if (retryConfig != []):
-				config = retryConfig.pop(0)
+	else:
+		ssr = SSR()
+		config = ssrp.getNextConfig()
+		while(True):
+			port += 1
+			setInfo(LOCAL_ADDRESS,port)
+			_item = {}
+			_item["group"] = config["group"]
+			_item["remarks"] = config["remarks"]
+			config["local_port"] = port
+			config["server_port"] = int(config["server_port"])
+			ssr.startSsr(config)
+			logger.info("Starting test for %s - %s" % (_item["group"],_item["remarks"]))
+			time.sleep(1)
+			try:
+				st = SpeedTest()
+				latencyTest = st.tcpPing(config["server"],config["server_port"])
+				time.sleep(1)
+				#_thread.start_new_thread(socks2httpServer.serve_forever,())
+				#logger.debug("socks2http server started.")
+				_item["dspeed"] = st.startTest(TEST_METHOD)
+				time.sleep(1)
+				ssr.stopSsr()
+				time.sleep(1)
+			#	.print (latencyTest)
+				_item["loss"] = 1 - latencyTest[1]
+				_item["ping"] = latencyTest[0]
+			#	_item["gping"] = st.googlePing()
+				_item["gping"] = 0
+				if ((int(_item["dspeed"]) == 0) and (retryMode == False)):
+				#	retryList.append(_item)
+					Result.append(_item)
+					retryConfig.append(config)
+				else:
+					Result.append(_item)
+				logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d - Google_Ping:%d - Speed:%.2f" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000),int(_item["gping"] * 1000),_item["dspeed"] / 1024 / 1024) + "MB")
+				#socks2httpServer.shutdown()
+				#logger.debug("Socks2HTTP Server already shutdown.")
+			except Exception:
+				ssr.stopSsr()
+				#socks2httpServer.shutdown()
+				#logger.debug("Socks2HTTP Server already shutdown.")
+				#traceback.print_exc()
+				logger.exception("")
+				sys.exit(1)
+			ssr.stopSsr()
+			if (retryMode):
+				if (retryConfig != []):
+					config = retryConfig.pop(0)
+				else:
+					config = None
 			else:
-				config = None
-		else:
-			config = ssrp.getNextConfig()
+				config = ssrp.getNextConfig()
 
-		if (config == None):
-			if ((retryMode == True) or (retryList == [])):
-				break
-			ans = str(input("%d node(s) got 0kb/s,do you want to re-test these node? (Y/N)" % len(retryList))).lower()
-			if (ans == "y"):
-			#	logger.debug(retryConfig)
-				retryMode = True
-				config = retryConfig.pop(0)
-			#	logger.debug(config)
-				continue
-			else:
-				for r in retryList:
-					for s in range(0,len(Result)):
-						if (r["remarks"] == Result[s]["remarks"]):
-							Result[s]["dspeed"] = r["dspeed"]
-							Result[s]["ping"] = r["ping"]
-							Result[s]["loss"] = r["loss"]
-							break
-				break
+			if (config == None):
+				if ((retryMode == True) or (retryList == [])):
+					break
+				ans = str(input("%d node(s) got 0kb/s,do you want to re-test these node? (Y/N)" % len(retryList))).lower()
+				if (ans == "y"):
+				#	logger.debug(retryConfig)
+					retryMode = True
+					config = retryConfig.pop(0)
+				#	logger.debug(config)
+					continue
+				else:
+					for r in retryList:
+						for s in range(0,len(Result)):
+							if (r["remarks"] == Result[s]["remarks"]):
+								Result[s]["dspeed"] = r["dspeed"]
+								Result[s]["ping"] = r["ping"]
+								Result[s]["loss"] = r["loss"]
+								break
+					break
 
-	export(Result,EXPORT_TYPE)
-	ssr.stopSsr()
-	#if (socks2httpServer):
-		#socks2httpServer.shutdown()
-		#logger.debug("Socks2HTTP Server already shutdown.")
-	sys.exit(0)
-#	ssr.stopSsr()
 
