@@ -70,12 +70,6 @@ class SpeedTest(object):
 			except:
 				logger.exception("")
 				return 0
-		elif (method == "CACHE_FLY"):
-			try:
-				return cachefly.speedtestcachefly(LOCAL_PORT)
-			except:
-				logger.exception("")
-				return 0
 		elif (method == "SOCKET"):#Old speedtest
 			try:
 				return stSocket.speedTestSocket(LOCAL_PORT)

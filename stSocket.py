@@ -14,7 +14,7 @@ from config import config
 MAX_THREAD = config["speedtestsocket"]["maxThread"]
 DEFAULT_SOCKET = socket.socket
 MAX_FILE_SIZE = 100 * 1024 * 1024
-BUFFER = 4096
+BUFFER = config["speedtestsocket"]["buffer"]
 EXIT_FLAG = False
 LOCAL_PORT = 1080
 LOCK = threading.Lock()

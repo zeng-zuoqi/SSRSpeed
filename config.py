@@ -3,10 +3,10 @@
 config = {
 	"speedtestsocket":{
 		"maxThread":4,	#Thread count
-		"buffer":4094,	#Buffer size,bytes
+		"buffer":4096,	#Buffer size,bytes
 		"downloadLinks":[
 			{
-				"area":[
+				"countries":[	#Country Code,for example: HK, US, JP etc.
 					"ALL"
 				],
 				"link":"https://cachefly.cachefly.net/100mb.test",
