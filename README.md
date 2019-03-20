@@ -8,7 +8,7 @@ ShadowsocksR Batch Speed Tool
 
 ## Features
 
- - Support SpeedTestNet, Fast.com,Cachefly and socket(removed).
+ - Support SpeedTestNet, Fast.com and socket download.
  - Support for exporting result as json and png.
  - Support batch import of SSR configuration from ShadowsocksR-CSharp configuration file and SSPanel-v2, v3 subscription link.
  - Support for importing data from any Json export file and re-exporting files of the specified format.

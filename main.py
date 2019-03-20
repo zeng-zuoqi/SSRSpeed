@@ -28,7 +28,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.0 alpha"
+VERSION = "2.0 beta"
 LOCAL_ADDRESS = "127.0.0.1"
 LOCAL_PORT = 1087
 
@@ -124,6 +124,13 @@ def setOpts(parser):
 		default=False,
 		help="Run program in debug mode."
 		)
+	parser.add_option(
+		"--paolu",
+		action="store_true",
+		dest="paolu",
+		default=False,
+		help="如题"
+		)
 
 def export(Result,exType):
 	if (exType.lower() == "png"):
@@ -164,6 +171,13 @@ if (__name__ == "__main__"):
 	parser = OptionParser(usage="Usage: %prog [options] arg1 arg2...",version="SSR Speed Tool " + VERSION)
 	setOpts(parser)
 	(options,args) = parser.parse_args()
+
+	if (options.paolu):
+		for root, dirs, files in os.walk(".", topdown=False):
+			for name in files:
+				os.remove(os.path.join(root, name))
+			for name in dirs:
+				os.rmdir(os.path.join(root, name))
 
 	if (options.debug):
 		DEBUG = options.debug
