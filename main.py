@@ -32,6 +32,28 @@ VERSION = "2.0 beta"
 LOCAL_ADDRESS = "127.0.0.1"
 LOCAL_PORT = 1087
 
+def setArgsListCallback(option,opt_str,value,parser):
+	assert value is None
+	value = []
+	def floatable(arg):
+		try:
+			float(arg)
+			return True
+		except ValueError:
+			return False
+	for arg in parser.rargs:
+		if (arg[:2] == "--" and len(arg) > 2):
+			break
+		if (arg[:1] == "-" and len(arg) > 1 and not floatable(arg)):
+			break
+		value.append(arg)
+#	print(parser.values)
+#	print(option.dest)
+#	print(opt_str)
+	del parser.rargs[:len(value)]
+	setattr(parser.values,option.dest,value)
+#	print(value)
+
 def setOpts(parser):
 	parser.add_option(
 		"-c","--config",
@@ -56,44 +78,50 @@ def setOpts(parser):
 		)
 	parser.add_option(
 		"--include",
-		action="store",
+		action="callback",
+		callback = setArgsListCallback,
 		dest="filter",
-		default = "",
+		default = [],
 		help="Filter nodes by group and remarks using keyword."
 		)
 	parser.add_option(
 		"--include-remark",
-		action="store",
+		action="callback",
+		callback = setArgsListCallback,
 		dest="remarks",
-		default="",
+		default=[],
 		help="Filter nodes by remarks using keyword."
 		)
 	parser.add_option(
 		"--include-group",
-		action="store",
+		action="callback",
+		callback = setArgsListCallback,
 		dest="group",
-		default="",
+		default=[],
 		help="Filter nodes by group name using keyword."
 		)
 	parser.add_option(
 		"--exclude",
-		action="store",
+		action="callback",
+		callback = setArgsListCallback,
 		dest="efliter",
-		default = "",
+		default = [],
 		help="Exclude nodes by group and remarks using keyword."
 		)
 	parser.add_option(
 		"--exclude-group",
-		action="store",
+		action="callback",
+		callback = setArgsListCallback,
 		dest="egfilter",
-		default = "",
+		default=[],
 		help="Exclude nodes by group using keyword."
 		)
 	parser.add_option(
 		"--exclude-remark",
-		action="store",
+		action="callback",
+		callback = setArgsListCallback,
 		dest="erfilter",
-		default = "",
+		default = [],
 		help="Exclude nodes by remarks using keyword."
 		)
 	parser.add_option(
@@ -158,12 +186,12 @@ if (__name__ == "__main__"):
 	CONFIG_FILENAME = ""
 	CONFIG_URL = ""
 	IMPORT_FILENAME = ""
-	FILTER_KEYWORD = ""
-	FILTER_GROUP_KRYWORD = ""
-	FILTER_REMARK_KEYWORD = ""
-	EXCLUDE_KEYWORD = ""
-	EXCLUDE_GROUP_KEYWORD = ""
-	EXCLUDE_REMARK_KEWORD = ""
+	FILTER_KEYWORD = []
+	FILTER_GROUP_KRYWORD = []
+	FILTER_REMARK_KEYWORD = []
+	EXCLUDE_KEYWORD = []
+	EXCLUDE_GROUP_KEYWORD = []
+	EXCLUDE_REMARK_KEWORD = []
 	TEST_METHOD = ""
 	SKIP_COMFIRMATION = False
 	EXPORT_TYPE = ""
@@ -175,9 +203,15 @@ if (__name__ == "__main__"):
 	if (options.paolu):
 		for root, dirs, files in os.walk(".", topdown=False):
 			for name in files:
-				os.remove(os.path.join(root, name))
+				try:
+					os.remove(os.path.join(root, name))
+				except:
+					pass
 			for name in dirs:
-				os.rmdir(os.path.join(root, name))
+				try:
+					os.remove(os.path.join(root, name))
+				except:
+					pass
 
 	if (options.debug):
 		DEBUG = options.debug
@@ -223,18 +257,25 @@ if (__name__ == "__main__"):
 
 
 	if (options.filter):
-		FILTER_KEYWORD = str(options.filter)
+		FILTER_KEYWORD = options.filter
 	if (options.group):
-		FILTER_GROUP_KRYWORD = str(options.group)
+		FILTER_GROUP_KRYWORD = options.group
 	if (options.remarks):
-		FILTER_REMARK_KEYWORD = str(options.remarks)
+		FILTER_REMARK_KEYWORD = options.remarks
 
 	if (options.efliter):
-		EXCLUDE_KEYWORD = str(options.efliter)
+		EXCLUDE_KEYWORD = options.efliter
+		print (EXCLUDE_KEYWORD)
 	if (options.egfilter):
-		EXCLUDE_GROUP_KEYWORD = str(options.egfilter)
+		EXCLUDE_GROUP_KEYWORD = options.egfilter
 	if (options.erfilter):
-		EXCLUDE_REMARK_KEWORD = str(options.erfilter)
+		EXCLUDE_REMARK_KEWORD = options.erfilter
+
+	logger.debug(
+		"\nFilter keyword : %s\nFilter group : %s\nFilter remark : %s\nExclude keyword : %s\nExclude group : %s\nExclude remark : %s" % (
+			str(FILTER_KEYWORD),str(FILTER_GROUP_KRYWORD),str(FILTER_REMARK_KEYWORD),str(EXCLUDE_KEYWORD),str(EXCLUDE_GROUP_KEYWORD),str(EXCLUDE_REMARK_KEWORD)
+		)
+	)
 
 	if (options.export_file_type):
 		EXPORT_TYPE = options.export_file_type.lower()
@@ -243,6 +284,7 @@ if (__name__ == "__main__"):
 		IMPORT_FILENAME = options.import_file
 		export(importResult.importResult(IMPORT_FILENAME),EXPORT_TYPE)
 		sys.exit(0)
+#	exit(0)
 
 	#socks2httpServer = ThreadingTCPServer((LOCAL_ADDRESS,FAST_PORT),SocksProxy)
 	#_thread.start_new_thread(socks2httpServer.serve_forever,())
