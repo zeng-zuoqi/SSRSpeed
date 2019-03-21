@@ -70,7 +70,7 @@ def exportAsPng(result):
 	draw.line((0,30,dspeedRightPosition - 1,30),fill=(127,127,127),width=1)
 
 	for i in range(0,len(result)):
-		draw.line((0,30 * i + 60,779,30 * i + 60),fill=(127,127,127),width=1)
+		draw.line((0,30 * i + 60,dspeedRightPosition,30 * i + 60),fill=(127,127,127),width=1)
 		item = result[i]
 
 		group = item["group"]
