@@ -307,19 +307,15 @@ if (__name__ == "__main__"):
 			if (not ssr.nextWinConf()):
 				break
 			time.sleep(1)
-
-		export(Result,EXPORT_TYPE)
-		ssr.stopSsr()
 	else:
 		ssr = SSR()
 		config = ssrp.getNextConfig()
 		while(True):
-			port += 1
-			setInfo(LOCAL_ADDRESS,port)
+			setInfo(LOCAL_ADDRESS,LOCAL_PORT)
 			_item = {}
 			_item["group"] = config["group"]
 			_item["remarks"] = config["remarks"]
-			config["local_port"] = port
+			config["local_port"] = LOCAL_PORT
 			config["server_port"] = int(config["server_port"])
 			ssr.startSsr(config)
 			logger.info("Starting test for %s - %s" % (_item["group"],_item["remarks"]))
@@ -342,10 +338,10 @@ if (__name__ == "__main__"):
 				if ((int(_item["dspeed"]) == 0) and (retryMode == False)):
 				#	retryList.append(_item)
 					Result.append(_item)
-					retryConfig.append(config)
+				#	retryConfig.append(config)
 				else:
 					Result.append(_item)
-				logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d - Google_Ping:%d - Speed:%.2f" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000),int(_item["gping"] * 1000),_item["dspeed"] / 1024 / 1024) + "MB")
+				logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d - Speed:%.2f" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000),_item["dspeed"] / 1024 / 1024) + "MB")
 				#socks2httpServer.shutdown()
 				#logger.debug("Socks2HTTP Server already shutdown.")
 			except Exception:
@@ -383,5 +379,8 @@ if (__name__ == "__main__"):
 								Result[s]["loss"] = r["loss"]
 								break
 					break
+
+	export(Result,EXPORT_TYPE)
+	ssr.stopSsr()
 
 
