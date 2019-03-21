@@ -1,4 +1,5 @@
 
+
   
   
 
@@ -53,61 +54,61 @@ pip3 install -r requirements.txt
 
   
 
-python .\main.py
-
-Usage: main.py [options] arg1 arg2...
-
-Options:
-
---version 显示版本号然后退出程序
-
--h, --help 显示该帮助并退出
-
---cli 以内置命令行形式运行程序
-
--c GUICONFIG, --config=GUICONFIG
-
-从ShadowsocksR的配置文件中导入节点
-
--u URL, --url=URL 从订阅链接中导入节点
-
--m TEST_METHOD, --method=TEST_METHOD
-
-从以下四种测速方式中选择一种方式测速
-
-[speedtestnet,fast,cachefly,socket]
-
---include=FILTER 仅选中组名或者备注中包含该关键字的节点
-
---include-remark=REMARKS
-
-仅选中备注中包含该关键字的节点
-
---include-group=GROUP
-
-仅选中组名中包含该关键字的节点
-
---exclude=EFLITER 排除组名或者备注中包含该关键字的节点
-
---exclude-group=EGFILTER
-
-排除组名中包含该关键字的节点
-
---exclude-remark=ERFILTER
-
-排除备注中包含该关键字的节点
-
--y, --yes 跳过节点信息确认直接进行测试
-
--e EXPORT_FILE_TYPE, --export=EXPORT_FILE_TYPE
-
-设置导出文件格式，当前支持json和png
-
--i IMPORT_FILE, --import=IMPORT_FILE
-
-从导出文件中导入结果，仅支持json
-
---debug 以调试模式运行程序
+    python .\main.py
+    
+    Usage: main.py [options] arg1 arg2...
+    
+    Options:
+    
+    --version 显示版本号然后退出程序
+    
+    -h, --help 显示该帮助并退出
+    
+    --cli 以内置命令行形式运行程序
+    
+    -c GUICONFIG, --config=GUICONFIG
+    
+    从ShadowsocksR的配置文件中导入节点
+    
+    -u URL, --url=URL 从订阅链接中导入节点
+    
+    -m TEST_METHOD, --method=TEST_METHOD
+    
+    从以下四种测速方式中选择一种方式测速
+    
+    [speedtestnet,fast,cachefly,socket]
+    
+    --include=FILTER 仅选中组名或者备注中包含该关键字的节点
+    
+    --include-remark=REMARKS
+    
+    仅选中备注中包含该关键字的节点
+    
+    --include-group=GROUP
+    
+    仅选中组名中包含该关键字的节点
+    
+    --exclude=EFLITER 排除组名或者备注中包含该关键字的节点
+    
+    --exclude-group=EGFILTER
+    
+    排除组名中包含该关键字的节点
+    
+    --exclude-remark=ERFILTER
+    
+    排除备注中包含该关键字的节点
+    
+    -y, --yes 跳过节点信息确认直接进行测试
+    
+    -e EXPORT_FILE_TYPE, --export=EXPORT_FILE_TYPE
+    
+    设置导出文件格式，当前支持json和png
+    
+    -i IMPORT_FILE, --import=IMPORT_FILE
+    
+    从导出文件中导入结果，仅支持json
+    
+    --debug 以调试模式运行程序
 
   
 
