@@ -4,6 +4,7 @@ import json
 import requests
 import subprocess
 import platform
+import signal
 import os
 import sys
 import logging
@@ -103,7 +104,10 @@ class SSR(object):
 
 	def stopSsr(self):
 		if(self.__process != None):
-			self.__process.terminate()
+			if (self.__checkPlatform() == "Windows"):
+				self.__process.terminate()
+			else:
+				self.__process.send_signal(signal.SIGQUIT)
 	#		print (self.__process.returncode)
 			self.__process = None
 			logger.info("ShadowsocksR terminated.")

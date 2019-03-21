@@ -1,10 +1,15 @@
 
 
 
+
+
 # SSRSpeed
 ShadowsocksR Batch Speed Tool
 
 中文文档请查看 [Readme_ZH_CN](https://github.com/NyanChanMeow/SSRSpeed/blob/master/README_ZH_CN.md)
+
+## Important Hint
+For the copyright issue, the "msyh.ttc" font will not be provided in the repository. When using the Linux operating system, please extract the font to the root directory of the program to export the resulting image.
 
 ## Features
 
@@ -20,6 +25,9 @@ ShadowsocksR Batch Speed Tool
  - requests
  - pysocks
 
+## Platform Support 
+1. Windows 10 x64 
+2. Ubuntu 18.04 LTS
 
 ## Getting started
 
