@@ -122,6 +122,7 @@ class SSRParse(object):
 		decoded = b64plus.decode(link).decode("utf-8")
 		decoded1 = decoded.split("/?")[0].split(":")[::-1]
 		if (len(decoded1) != 6):
+			return None
 			addr = ""
 			for i in range(5,len(decoded1) - 1):
 				addr += decoded1[i] + ":"
@@ -253,7 +254,9 @@ class SSRParse(object):
 			link = link.strip()
 			if (link[:6] != "ssr://"):continue
 			link = link[6:]
-			self.__configList.append(self.__parseLink(link))
+			cfg = self.__parseLink(link)
+			if (cfg):
+				self.__configList.append(cfg)
 
 		logger.info("Read %d node(s)" % len(self.__configList))
 			
