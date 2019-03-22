@@ -465,6 +465,7 @@ if (__name__ == "__main__"):
 			if (config == None):break
 
 	export(Result,EXPORT_TYPE)
+	time.sleep(1)
 	ssr.stopSsr()
 
 

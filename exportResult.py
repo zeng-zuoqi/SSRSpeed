@@ -45,6 +45,10 @@ def exportAsPng(result):
 	weight = getMaxWeight(result,resultFont)
 	groupWeight = weight[0]
 	remarkWeight = weight[1]
+	if (groupWeight < 60):
+		groupWeight = 60
+	if (remarkWeight < 60):
+		remarkWeight = 90
 	otherWeight = 60
 	
 	groupRightPosition = groupWeight
