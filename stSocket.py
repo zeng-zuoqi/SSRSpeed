@@ -56,7 +56,10 @@ def speedTestThread(link):
 	logger.debug("\nLink: %s\nHost: %s\nRequestUri: %s" % (link,host,requestUri))
 	try:
 		s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-		s.connect((host,80))
+		try:
+			s.connect((host,80))
+		except socks.GeneralProxyError:
+			pass
 		s.send(b"GET %b HTTP/1.1\r\nHost: %b\r\nUser-Agent: curl/11.45.14\r\n\r\n" % (requestUri.encode("utf-8"),host.encode("utf-8")))
 		startTime = time.time()
 		received = 0
@@ -77,6 +80,7 @@ def speedTestThread(link):
 
 def speedTestSocket(port):
 	global EXIT_FLAG,LOCAL_PORT,MAX_TIME,TOTAL_RECEIVED,MAX_FILE_SIZE
+	LOCAL_PORT = port
 	res = parseLocation()
 	link = ""
 	if (res[0]):
@@ -109,7 +113,6 @@ def speedTestSocket(port):
 	MAX_TIME = 0
 	TOTAL_RECEIVED = 0
 	EXIT_FLAG = False
-	LOCAL_PORT = port
 	socks.set_default_proxy(socks.SOCKS5,"127.0.0.1",LOCAL_PORT)
 	socket.socket = socks.socksocket
 	for i in range(0,MAX_THREAD):
