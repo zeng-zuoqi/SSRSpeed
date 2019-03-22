@@ -46,6 +46,8 @@ def setArgsListCallback(option,opt_str,value,parser):
 			break
 		if (arg[:1] == "-" and len(arg) > 1 and not floatable(arg)):
 			break
+		if (arg.replace(" ","") == ""):
+			continue
 		value.append(arg)
 #	print(parser.values)
 #	print(option.dest)
