@@ -162,58 +162,79 @@ class SSRParse(object):
 		_config["fast_open"] = False
 		return _config
 
-	def __filterGroup(self,gkw):
-		_list = []
-		if (gkw == ""):return
-		for item in self.__configList:
-			if (gkw in item["group"]):
-				_list.append(item)
-		self.__configList = _list
+	def __checkInList(self,item,_list):
+		for _item in _list:
+			if (_item["group"] == item["group"] and _item["remarks"] == item["remarks"]):
+				return True
+		return False
 
-	def __filterRemark(self,rkw):
+	def __filterGroup(self,gkwl):
 		_list = []
-		if (rkw == ""):return
-		for item in self.__configList:
-			if (rkw in item["remarks"]):
-				_list.append(item)
-		self.__configList = _list
-
-	def filterNode(self,kw = "",gkw = "",rkw = ""):
-		_list = []
-		if (kw != ""):
+		if (gkwl == []):return
+		for gkw in gkwl:
 			for item in self.__configList:
-				if ((kw in item["group"]) or (kw in item["remarks"])):
+				if (self.__checkInList(item,_list)):continue
+				if (gkw in item["group"]):
+					_list.append(item)
+		self.__configList = _list
+
+	def __filterRemark(self,rkwl):
+		_list = []
+		if (rkwl == []):return
+		for rkw in rkwl:
+			for item in self.__configList:
+				if (self.__checkInList(item,_list)):continue
+				if (rkw in item["remarks"]):
+					_list.append(item)
+		self.__configList = _list
+
+	def filterNode(self,kwl = [],gkwl = [],rkwl = []):
+		_list = []
+	#	print(len(self.__configList))
+	#	print(type(kwl))
+		if (kwl != []):
+			for kw in kwl:
+				for item in self.__configList:
+					if (self.__checkInList(item,_list)):continue
+					if ((kw in item["group"]) or (kw in item["remarks"])):
+						_list.append(item)
+			self.__configList = _list
+		self.__filterGroup(gkwl)
+		self.__filterRemark(rkwl)
+
+	def __excludeGroup(self,gkwl):
+		if (gkwl == []):return
+		for gkw in gkwl:
+			_list = []
+			for item in self.__configList:
+				if (self.__checkInList(item,_list)):continue
+				if (gkw not in item["group"]):
 					_list.append(item)
 			self.__configList = _list
-		self.__filterGroup(gkw)
-		self.__filterRemark(rkw)
 
-	def __excludeGroup(self,gkw):
-		_list = []
-		if (gkw == ""):return
-		for item in self.__configList:
-			if (gkw not in item["group"]):
-				_list.append(item)
-		self.__configList = _list
+	def __excludeRemark(self,rkwl):
+		if (rkwl == []):return
+		for rkw in rkwl:
+			_list = []
+			for item in self.__configList:
+				if (self.__checkInList(item,_list)):continue
+				if (rkw not in item["remarks"]):
+					_list.append(item)
+			self.__configList = _list
 
-	def __excludeRemark(self,rkw):
-		_list = []
-		if (rkw == ""):return
-		for item in self.__configList:
-			if (rkw not in item["remarks"]):
-				_list.append(item)
-		self.__configList = _list
-
-	def excludeNode(self,kw = "",gkw = "",rkw = ""):
+	def excludeNode(self,kwl = [],gkwl = [],rkwl = []):
 	#	print((kw,gkw,rkw))
-		_list = []
-		if (kw != ""):
-			for item in self.__configList:
-				if ((kw not in item["group"]) and (kw not in item["remarks"])):
-					_list.append(item)
-			self.__configList = _list
-		self.__excludeGroup(gkw)
-		self.__excludeRemark(rkw)
+	#	print(len(self.__configList))
+		if (kwl != []):
+			for kw in kwl:
+				_list = []
+				for item in self.__configList:
+					if (self.__checkInList(item,_list)):continue
+					if ((kw not in item["group"]) and (kw not in item["remarks"])):
+						_list.append(item)
+				self.__configList = _list
+		self.__excludeGroup(gkwl)
+		self.__excludeRemark(rkwl)
 
 	def printNode(self):
 		for item in self.__configList:

@@ -32,6 +32,30 @@ VERSION = "2.0 beta"
 LOCAL_ADDRESS = "127.0.0.1"
 LOCAL_PORT = 1087
 
+def setArgsListCallback(option,opt_str,value,parser):
+	assert value is None
+	value = []
+	def floatable(arg):
+		try:
+			float(arg)
+			return True
+		except ValueError:
+			return False
+	for arg in parser.rargs:
+		if (arg[:2] == "--" and len(arg) > 2):
+			break
+		if (arg[:1] == "-" and len(arg) > 1 and not floatable(arg)):
+			break
+		if (arg.replace(" ","") == ""):
+			continue
+		value.append(arg)
+#	print(parser.values)
+#	print(option.dest)
+#	print(opt_str)
+	del parser.rargs[:len(value)]
+	setattr(parser.values,option.dest,value)
+#	print(value)
+
 def setOpts(parser):
 	parser.add_option(
 		"-c","--config",
@@ -52,48 +76,61 @@ def setOpts(parser):
 		action="store",
 		dest="test_method",
 		default="socket",
-		help="Select test method in [speedtestnet,fast,socket]"
+		help="Select test method in [speedtestnet,fast,socket]."
+		)
+	parser.add_option(
+		"-M","--mode",
+		action="store",
+		dest="test_mode",
+		default="all",
+		help="Select test mode in [all,pingonly]."
 		)
 	parser.add_option(
 		"--include",
-		action="store",
+		action="callback",
+		callback = setArgsListCallback,
 		dest="filter",
-		default = "",
+		default = [],
 		help="Filter nodes by group and remarks using keyword."
 		)
 	parser.add_option(
 		"--include-remark",
-		action="store",
+		action="callback",
+		callback = setArgsListCallback,
 		dest="remarks",
-		default="",
+		default=[],
 		help="Filter nodes by remarks using keyword."
 		)
 	parser.add_option(
 		"--include-group",
-		action="store",
+		action="callback",
+		callback = setArgsListCallback,
 		dest="group",
-		default="",
+		default=[],
 		help="Filter nodes by group name using keyword."
 		)
 	parser.add_option(
 		"--exclude",
-		action="store",
+		action="callback",
+		callback = setArgsListCallback,
 		dest="efliter",
-		default = "",
+		default = [],
 		help="Exclude nodes by group and remarks using keyword."
 		)
 	parser.add_option(
 		"--exclude-group",
-		action="store",
+		action="callback",
+		callback = setArgsListCallback,
 		dest="egfilter",
-		default = "",
+		default=[],
 		help="Exclude nodes by group using keyword."
 		)
 	parser.add_option(
 		"--exclude-remark",
-		action="store",
+		action="callback",
+		callback = setArgsListCallback,
 		dest="erfilter",
-		default = "",
+		default = [],
 		help="Exclude nodes by remarks using keyword."
 		)
 	parser.add_option(
@@ -158,13 +195,14 @@ if (__name__ == "__main__"):
 	CONFIG_FILENAME = ""
 	CONFIG_URL = ""
 	IMPORT_FILENAME = ""
-	FILTER_KEYWORD = ""
-	FILTER_GROUP_KRYWORD = ""
-	FILTER_REMARK_KEYWORD = ""
-	EXCLUDE_KEYWORD = ""
-	EXCLUDE_GROUP_KEYWORD = ""
-	EXCLUDE_REMARK_KEWORD = ""
+	FILTER_KEYWORD = []
+	FILTER_GROUP_KRYWORD = []
+	FILTER_REMARK_KEYWORD = []
+	EXCLUDE_KEYWORD = []
+	EXCLUDE_GROUP_KEYWORD = []
+	EXCLUDE_REMARK_KEWORD = []
 	TEST_METHOD = ""
+	TEST_MODE = ""
 	SKIP_COMFIRMATION = False
 	EXPORT_TYPE = ""
 
@@ -175,9 +213,15 @@ if (__name__ == "__main__"):
 	if (options.paolu):
 		for root, dirs, files in os.walk(".", topdown=False):
 			for name in files:
-				os.remove(os.path.join(root, name))
+				try:
+					os.remove(os.path.join(root, name))
+				except:
+					pass
 			for name in dirs:
-				os.rmdir(os.path.join(root, name))
+				try:
+					os.remove(os.path.join(root, name))
+				except:
+					pass
 
 	if (options.debug):
 		DEBUG = options.debug
@@ -202,6 +246,15 @@ if (__name__ == "__main__"):
 	else:
 		TEST_METHOD = "SOCKET"
 
+	if (options.test_mode == "pingonly"):
+		TEST_MODE = "TCP_PING"
+	elif(options.test_mode == "all"):
+		TEST_MODE = "ALL"
+	else:
+		logger.error("Invalid test mode : %s" % options.test_mode)
+		sys.exit(1)
+	
+
 	if (options.confirmation):
 		SKIP_COMFIRMATION = options.confirmation
 
@@ -223,18 +276,25 @@ if (__name__ == "__main__"):
 
 
 	if (options.filter):
-		FILTER_KEYWORD = str(options.filter)
+		FILTER_KEYWORD = options.filter
 	if (options.group):
-		FILTER_GROUP_KRYWORD = str(options.group)
+		FILTER_GROUP_KRYWORD = options.group
 	if (options.remarks):
-		FILTER_REMARK_KEYWORD = str(options.remarks)
+		FILTER_REMARK_KEYWORD = options.remarks
 
 	if (options.efliter):
-		EXCLUDE_KEYWORD = str(options.efliter)
+		EXCLUDE_KEYWORD = options.efliter
+	#	print (EXCLUDE_KEYWORD)
 	if (options.egfilter):
-		EXCLUDE_GROUP_KEYWORD = str(options.egfilter)
+		EXCLUDE_GROUP_KEYWORD = options.egfilter
 	if (options.erfilter):
-		EXCLUDE_REMARK_KEWORD = str(options.erfilter)
+		EXCLUDE_REMARK_KEWORD = options.erfilter
+
+	logger.debug(
+		"\nFilter keyword : %s\nFilter group : %s\nFilter remark : %s\nExclude keyword : %s\nExclude group : %s\nExclude remark : %s" % (
+			str(FILTER_KEYWORD),str(FILTER_GROUP_KRYWORD),str(FILTER_REMARK_KEYWORD),str(EXCLUDE_KEYWORD),str(EXCLUDE_GROUP_KEYWORD),str(EXCLUDE_REMARK_KEWORD)
+		)
+	)
 
 	if (options.export_file_type):
 		EXPORT_TYPE = options.export_file_type.lower()
@@ -243,6 +303,7 @@ if (__name__ == "__main__"):
 		IMPORT_FILENAME = options.import_file
 		export(importResult.importResult(IMPORT_FILENAME),EXPORT_TYPE)
 		sys.exit(0)
+#	exit(0)
 
 	#socks2httpServer = ThreadingTCPServer((LOCAL_ADDRESS,FAST_PORT),SocksProxy)
 	#_thread.start_new_thread(socks2httpServer.serve_forever,())
@@ -256,6 +317,12 @@ if (__name__ == "__main__"):
 	ssrp.excludeNode(EXCLUDE_KEYWORD,EXCLUDE_GROUP_KEYWORD,EXCLUDE_REMARK_KEWORD)
 	ssrp.printNode()
 	if (not SKIP_COMFIRMATION):
+		if (TEST_MODE == "TCP_PING"):
+			logger.info("Test mode : tcp ping only.")
+			print("Your test mode is tcp ping only.")
+		else:
+			logger.info("Test mode : speed and tcp ping.\nTest method : %s." % TEST_METHOD)
+			print("Your test mode : speed and tcp ping.\nTest method : %s." % TEST_METHOD)
 		ans = input("Before the test please confirm the nodes,Ctrl-C to exit. (Y/N)")
 		if (ans == "Y"):
 			pass
@@ -276,10 +343,11 @@ if (__name__ == "__main__"):
 	retryList = []
 	retryConfig = []
 	retryMode = False
-#	exit(0)
-	if (checkPlatform() == "Windows"):
+
+	ssr = SSR()
+
+	if (checkPlatform() == "Windows" and TEST_MODE == "ALL"):
 		configs = ssrp.getAllConfig()
-		ssr = SSR()
 		ssr.addConfig(configs)
 		ssr.startSsr()
 		setInfo(LOCAL_ADDRESS,LOCAL_PORT)
@@ -307,8 +375,7 @@ if (__name__ == "__main__"):
 			if (not ssr.nextWinConf()):
 				break
 			time.sleep(1)
-	else:
-		ssr = SSR()
+	elif(checkPlatform() == "Linux" and TEST_MODE == "ALL"):
 		config = ssrp.getNextConfig()
 		while(True):
 			setInfo(LOCAL_ADDRESS,LOCAL_PORT)
@@ -379,6 +446,23 @@ if (__name__ == "__main__"):
 								Result[s]["loss"] = r["loss"]
 								break
 					break
+	
+	if (TEST_MODE == "TCP_PING"):
+		config = ssrp.getNextConfig()
+		while (True):
+			_item = {}
+			_item["group"] = config["group"]
+			_item["remarks"] = config["remarks"]
+			config["server_port"] = int(config["server_port"])
+			st = SpeedTest()
+			latencyTest = st.tcpPing(config["server"],config["server_port"])
+			_item["loss"] = 1 - latencyTest[1]
+			_item["ping"] = latencyTest[0]
+			_item["dspeed"] = -1
+			Result.append(_item)
+			logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000)))
+			config = ssrp.getNextConfig()
+			if (config == None):break
 
 	export(Result,EXPORT_TYPE)
 	ssr.stopSsr()

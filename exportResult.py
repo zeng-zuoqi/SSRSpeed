@@ -39,6 +39,8 @@ def generateWatermark(img,imgWeight,imgHeight):
 def exportAsPng(result):
 	resultFont = ImageFont.truetype("msyh.ttc",18)
 
+	generatedTime = time.localtime()
+
 	imageHeight = len(result) * 30 + 30
 	weight = getMaxWeight(result,resultFont)
 	groupWeight = weight[0]
@@ -90,11 +92,14 @@ def exportAsPng(result):
 		draw.text((lossRightPosition + 5,30 * i + 30 + 4),ping,font=resultFont,fill=(0,0,0))
 
 		speed = item["dspeed"]
-		draw.rectangle((tcpPingRightPosition + 1,30 * i + 30 + 1,dspeedRightPosition - 1,30 * i + 60 -1),getColor(speed))
-		draw.text((tcpPingRightPosition + 5,30 * i + 30 + 1),parseSpeed(speed),font=resultFont,fill=(0,0,0))
+		if (speed == -1):
+			draw.text((tcpPingRightPosition + 5,30 * i + 30 + 1),"N/A",font=resultFont,fill=(0,0,0))
+		else:
+			draw.rectangle((tcpPingRightPosition + 1,30 * i + 30 + 1,dspeedRightPosition - 1,30 * i + 60 -1),getColor(speed))
+			draw.text((tcpPingRightPosition + 5,30 * i + 30 + 1),parseSpeed(speed),font=resultFont,fill=(0,0,0))
 	
-	draw.text((5,imageHeight + 4),"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),font=resultFont,fill=(0,0,0))
-	filename = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + ".png"
+	#draw.text((5,imageHeight + 4),"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),font=resultFont,fill=(0,0,0))
+	filename = time.strftime("%Y-%m-%d-%H-%M-%S", generatedTime) + ".png"
 	resultImg.save(filename)
 	logger.info("Result image saved as %s" % filename)
 
