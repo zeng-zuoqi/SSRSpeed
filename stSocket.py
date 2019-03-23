@@ -8,6 +8,7 @@ import json
 import time
 import re
 import logging
+
 logger = logging.getLogger("Sub")
 """
 logger = logging.getLogger("main")
@@ -73,9 +74,11 @@ def speedTestThread(link):
 		received = 0
 		while True:
 			xx = s.recv(BUFFER)
+			lxx = len(xx)
 		#	received += len(xx)
+			received += lxx
 			LOCK.acquire()
-			TOTAL_RECEIVED += len(xx)
+			TOTAL_RECEIVED += lxx
 			LOCK.release()
 			if (received >= MAX_FILE_SIZE or EXIT_FLAG):
 				break
@@ -137,6 +140,7 @@ def speedTestSocket(port):
 	for i in range(0,MAX_THREAD):
 		nmsl = threading.Thread(target=speedTestThread,args=(link,))
 		nmsl.start()
+	maxSpeedList = []
 	maxSpeed = 0
 	currentSpeed = 0
 	OLD_RECEIVED = 0
@@ -148,6 +152,8 @@ def speedTestSocket(port):
 		OLD_RECEIVED = TOTAL_RECEIVED
 		LOCK.release()
 		maxSpeed = max(maxSpeed,currentSpeed)
+	#	if (maxSpeed not in maxSpeedList):
+		maxSpeedList.append(currentSpeed)
 	#	print("maxSpeed : %f" % maxSpeed)
 		print("\r[" + "="*i + "> [%d%%/100%%] [%.2f MB/s] [%.2f MB/s]" % (int(i * 5),currentSpeed / 1024 / 1024,maxSpeed / 1024 / 1024),end='')
 		if (EXIT_FLAG):
@@ -162,6 +168,13 @@ def speedTestSocket(port):
 		logger.error("Socket Test Error !")
 		return(0,0)
 	restoreSocket()
+	maxSpeedList.sort()
+	if (len(maxSpeedList) > 8):
+		msum = 0
+		for i in range(len(maxSpeedList) - 8,len(maxSpeedList) - 2):
+			msum += maxSpeedList[i]
+		maxSpeed = (msum / 6)
+#	print(maxSpeed / 1024 / 1024)
 	return (TOTAL_RECEIVED / MAX_TIME,maxSpeed)
 
 if (__name__ == "__main__"):
