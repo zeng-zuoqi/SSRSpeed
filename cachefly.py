@@ -19,6 +19,10 @@ def pingtcptest(host,port):
 			s.close()
 			alt+=time.time()-st
 			suc+=1
+		except (socket.timeout,ConnectionRefusedError):
+			fac+=1
+			logger.warn("TCP Ping (%s,%d) Timeout %d times." % (host,port,fac))
+		#	print("TCP Ping Timeout %d times." % fac)
 		except Exception as err:
 			logger.exception("TCP Ping Exception:")
 			fac+=1
@@ -46,3 +50,6 @@ def pinggoogletest(port=1080):
 			logger.exception("Google Ping Exception:")
 			alt+=10000
 	return alt/2
+
+if (__name__ == "__main__"):
+	print(pingtcptest("127.0.0.2",80))

@@ -9,7 +9,14 @@ import time
 import re
 import logging
 logger = logging.getLogger("Sub")
-
+"""
+logger = logging.getLogger("main")
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter("[%(asctime)s][%(levelname)s][%(thread)d][%(filename)s:%(lineno)d]%(message)s")
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(formatter)
+logger.addHandler(consoleHandler)
+"""
 
 from config import config
 
@@ -21,6 +28,7 @@ EXIT_FLAG = False
 LOCAL_PORT = 1080
 LOCK = threading.Lock()
 TOTAL_RECEIVED = 0
+DELTA_RECEIVED = 0
 MAX_TIME = 0
 
 def setProxyPort(port):
@@ -49,7 +57,7 @@ def parseLocation():
 	return(False,"ALL","ALL")
 
 def speedTestThread(link):
-	global TOTAL_RECEIVED,MAX_TIME
+	global TOTAL_RECEIVED,MAX_TIME,DELTA_RECEIVED
 	link = link.replace("https://","").replace("http://","")
 	host = link[:link.find("/")]
 	requestUri = link[link.find("/"):]
@@ -60,18 +68,21 @@ def speedTestThread(link):
 			s.connect((host,80))
 		except socks.GeneralProxyError:
 			pass
-		s.send(b"GET %b HTTP/1.1\r\nHost: %b\r\nUser-Agent: curl/11.45.14\r\n\r\n" % (requestUri.encode("utf-8"),host.encode("utf-8")))
+		s.send(b"GET %b HTTP/1.1\r\nHost: %b\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36\r\n\r\n" % (requestUri.encode("utf-8"),host.encode("utf-8")))
 		startTime = time.time()
 		received = 0
 		while True:
 			xx = s.recv(BUFFER)
-			received += len(xx)
+		#	received += len(xx)
+			LOCK.acquire()
+			TOTAL_RECEIVED += len(xx)
+			LOCK.release()
 			if (received >= MAX_FILE_SIZE or EXIT_FLAG):
 				break
 		endTime = time.time()
 		s.close()
 		LOCK.acquire()
-		TOTAL_RECEIVED += received
+	#	TOTAL_RECEIVED += received
 		MAX_TIME = max(MAX_TIME,endTime - startTime)
 		LOCK.release()
 	except:
@@ -79,11 +90,14 @@ def speedTestThread(link):
 		return 0
 
 def speedTestSocket(port):
-	global EXIT_FLAG,LOCAL_PORT,MAX_TIME,TOTAL_RECEIVED,MAX_FILE_SIZE
+	global EXIT_FLAG,LOCAL_PORT,MAX_TIME,TOTAL_RECEIVED,MAX_FILE_SIZE,DELTA_RECEIVED
 	LOCAL_PORT = port
-	res = parseLocation()
+	useDefault = config["speedtestsocket"]["useDefault"]
+	res = (False,"ALL","ALL")
+	if (not useDefault):
+		res = parseLocation()
 	link = ""
-	if (res[0]):
+	if (not useDefault and res[0]):
 		isFound = False
 		for _item in config["speedtestsocket"]["downloadLinks"]:
 		#	logger.debug(_item)
@@ -103,11 +117,16 @@ def speedTestSocket(port):
 				break
 		if (not isFound):
 			logger.warn("No download link match,using default.")
-			link = "https://cachefly.cachefly.net/100mb.test"
-			MAX_FILE_SIZE = _item["fileSize"] * 1024 * 1024
+			link = config["speedtestsocket"]["defaultDownloadLink"]["link"]
+			MAX_FILE_SIZE = config["speedtestsocket"]["defaultDownloadLink"]["fileSize"] * 1024 * 1024
+	elif (useDefault):
+		link = config["speedtestsocket"]["defaultDownloadLink"]["link"]
+		MAX_FILE_SIZE = config["speedtestsocket"]["defaultDownloadLink"]["fileSize"] * 1024 * 1024
+		logger.info("Using default download link %s" % link)
 	else:
 		logger.warn("Parse location failed, using default link.")
-		link = config["speedtestsocket"]["defaultDownloadLink"]
+		link = config["speedtestsocket"]["defaultDownloadLink"]["link"]
+		MAX_FILE_SIZE = config["speedtestsocket"]["defaultDownloadLink"]["fileSize"] * 1024 * 1024
 	#return 0
 	#logger.debug("Actived threads: %d" % threading.active_count())
 	MAX_TIME = 0
@@ -118,10 +137,22 @@ def speedTestSocket(port):
 	for i in range(0,MAX_THREAD):
 		nmsl = threading.Thread(target=speedTestThread,args=(link,))
 		nmsl.start()
-	for i in range(0,100):
-		time.sleep(0.1)
+	maxSpeed = 0
+	currentSpeed = 0
+	OLD_RECEIVED = 0
+	for i in range(1,21):
+		time.sleep(0.5)
+		LOCK.acquire()
+	#	print("Delta Received : %d" % DELTA_RECEIVED)
+		currentSpeed = (TOTAL_RECEIVED - OLD_RECEIVED) / 0.5
+		OLD_RECEIVED = TOTAL_RECEIVED
+		LOCK.release()
+		maxSpeed = max(maxSpeed,currentSpeed)
+	#	print("maxSpeed : %f" % maxSpeed)
+		print("\r[" + "="*i + "> [%d%%/100%%] [%.2f MB/s] [%.2f MB/s]" % (int(i * 5),currentSpeed / 1024 / 1024,maxSpeed / 1024 / 1024),end='')
 		if (EXIT_FLAG):
 			break
+	print("\r[" + "="*i + "] [100%%/100%%] [%.2f MB/s] [%.2f MB/s]" % (currentSpeed / 1024 / 1024,maxSpeed / 1024 / 1024),end='\n')
 	EXIT_FLAG = True
 	for i in range(0,10):
 		time.sleep(0.1)
@@ -129,10 +160,10 @@ def speedTestSocket(port):
 			break
 	if (MAX_TIME == 0):
 		logger.error("Socket Test Error !")
-		MAX_TIME = 1
+		return(0,0)
 	restoreSocket()
-	return TOTAL_RECEIVED / MAX_TIME
+	return (TOTAL_RECEIVED / MAX_TIME,maxSpeed)
 
 if (__name__ == "__main__"):
-	print(speedTestSocket(1080) / 1024 / 1024)
+	print(speedTestSocket(1080)[0] / 1024 / 1024)
 

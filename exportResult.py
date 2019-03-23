@@ -49,16 +49,17 @@ def exportAsPng(result):
 		groupWeight = 60
 	if (remarkWeight < 60):
 		remarkWeight = 90
-	otherWeight = 60
+	otherWeight = 100
 	
 	groupRightPosition = groupWeight
 	remarkRightPosition = groupRightPosition + remarkWeight
 	lossRightPosition = remarkRightPosition + otherWeight
 	tcpPingRightPosition = lossRightPosition + otherWeight
-	dspeedRightPosition = tcpPingRightPosition + otherWeight + 30
+	dspeedRightPosition = tcpPingRightPosition + otherWeight
+	maxDSpeedRightPosition = dspeedRightPosition + otherWeight
 
-	resultImg = Image.new("RGB",(dspeedRightPosition,imageHeight + 30),(255,255,255))
-	
+	resultImg = Image.new("RGB",(maxDSpeedRightPosition,imageHeight + 30),(255,255,255))
+	print(1)
 	draw = ImageDraw.Draw(resultImg)
 
 	draw.line((0,0,0,imageHeight - 1),fill=(127,127,127),width=1)
@@ -66,17 +67,19 @@ def exportAsPng(result):
 	draw.line((remarkRightPosition,0,remarkRightPosition,imageHeight - 1),fill=(127,127,127),width=1)
 	draw.line((lossRightPosition,0,lossRightPosition,imageHeight - 1),fill=(127,127,127),width=1)
 	draw.line((tcpPingRightPosition,0,tcpPingRightPosition,imageHeight - 1),fill=(127,127,127),width=1)
+	draw.line((dspeedRightPosition,0,dspeedRightPosition,imageHeight - 1),fill=(127,127,127),width=1)
 	
 	draw.text((5,4),"Group",font=resultFont,fill=(0,0,0))
 	draw.text((groupRightPosition + 5,4),"Remarks",font=resultFont,fill=(0,0,0))
 	draw.text((remarkRightPosition + 5,4),"Loss",font=resultFont,fill=(0,0,0))
 	draw.text((lossRightPosition + 5,4),"Ping",font=resultFont,fill=(0,0,0))
-	draw.text((tcpPingRightPosition + 5,4),"DSpeed",font=resultFont,fill=(0,0,0))
+	draw.text((tcpPingRightPosition + 5,4),"AvgSpeed",font=resultFont,fill=(0,0,0))
+	draw.text((dspeedRightPosition + 5,4),"MaxSpeed",font=resultFont,fill=(0,0,0))
 	
-	draw.line((0,30,dspeedRightPosition - 1,30),fill=(127,127,127),width=1)
+	draw.line((0,30,maxDSpeedRightPosition - 1,30),fill=(127,127,127),width=1)
 
 	for i in range(0,len(result)):
-		draw.line((0,30 * i + 60,dspeedRightPosition,30 * i + 60),fill=(127,127,127),width=1)
+		draw.line((0,30 * i + 60,maxDSpeedRightPosition,30 * i + 60),fill=(127,127,127),width=1)
 		item = result[i]
 
 		group = item["group"]
@@ -85,14 +88,10 @@ def exportAsPng(result):
 		remarks = item["remarks"]
 		draw.text((groupRightPosition + 5,30 * i + 30 + 4),remarks,font=resultFont,fill=(0,0,0,0))
 
-		loss = str(item["loss"] * 100) + "%%"
-		while(draw.textsize(loss,font=resultFont)[0] > 50):
-			loss = loss[:-1]
+		loss = "%.2f" % (item["loss"] * 100) + "%"
 		draw.text((remarkRightPosition + 5,30 * i + 30 + 4),loss,font=resultFont,fill=(0,0,0))
 
-		ping = str(item["ping"] * 1000)
-		while(draw.textsize(ping,font=resultFont)[0] > 50):
-			ping = ping[:-1]
+		ping = "%.2f" % (item["ping"] * 1000)
 		draw.text((lossRightPosition + 5,30 * i + 30 + 4),ping,font=resultFont,fill=(0,0,0))
 
 		speed = item["dspeed"]
@@ -101,8 +100,15 @@ def exportAsPng(result):
 		else:
 			draw.rectangle((tcpPingRightPosition + 1,30 * i + 30 + 1,dspeedRightPosition - 1,30 * i + 60 -1),getColor(speed))
 			draw.text((tcpPingRightPosition + 5,30 * i + 30 + 1),parseSpeed(speed),font=resultFont,fill=(0,0,0))
+
+		maxSpeed = item["maxDSpeed"]
+		if (maxSpeed == -1):
+			draw.text((dspeedRightPosition + 5,30 * i + 30 + 1),"N/A",font=resultFont,fill=(0,0,0))
+		else:
+			draw.rectangle((dspeedRightPosition + 1,30 * i + 30 + 1,maxDSpeedRightPosition - 1,30 * i + 60 -1),getColor(maxSpeed))
+			draw.text((dspeedRightPosition + 5,30 * i + 30 + 1),parseSpeed(maxSpeed),font=resultFont,fill=(0,0,0))
 	
-	#draw.text((5,imageHeight + 4),"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),font=resultFont,fill=(0,0,0))
+	draw.text((5,imageHeight + 4),"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),font=resultFont,fill=(0,0,0))
 	filename = time.strftime("%Y-%m-%d-%H-%M-%S", generatedTime) + ".png"
 	resultImg.save(filename)
 	logger.info("Result image saved as %s" % filename)

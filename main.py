@@ -362,12 +362,27 @@ if (__name__ == "__main__"):
 			try:
 				st = SpeedTest()
 				latencyTest = st.tcpPing(config["server"],config["server_port"])
-				time.sleep(1)
-				_item["dspeed"] = st.startTest(TEST_METHOD)
-				time.sleep(1)
+				if (latencyTest[0] != 0):
+					time.sleep(1)
+					testRes = st.startTest(TEST_METHOD)
+					_item["dspeed"] = testRes[0]
+					_item["maxDSpeed"] = testRes[1]
+					time.sleep(1)
+				else:
+					_item["dspeed"] = 0
+					_item["maxDSpeed"] = 0
 				_item["loss"] = 1 - latencyTest[1]
 				_item["ping"] = latencyTest[0]
-				logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d - Speed:%.2f" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000),_item["dspeed"] / 1024 / 1024) + "MB")
+				logger.info(
+					"%s - %s - Loss:%s%% - TCP_Ping:%d - AvgSpeed:%.2fMB/s - MaxSpeed:%.2fMB/s" % (
+						_item["group"],
+						_item["remarks"],
+						_item["loss"] * 100,
+						int(_item["ping"] * 1000),
+						_item["dspeed"] / 1024 / 1024,
+						_item["maxDSpeed"] / 1024 / 1024
+						)
+					)
 				Result.append(_item)
 			except:
 				logger.exception("")
@@ -390,11 +405,15 @@ if (__name__ == "__main__"):
 			try:
 				st = SpeedTest()
 				latencyTest = st.tcpPing(config["server"],config["server_port"])
-				time.sleep(1)
-				#_thread.start_new_thread(socks2httpServer.serve_forever,())
-				#logger.debug("socks2http server started.")
-				_item["dspeed"] = st.startTest(TEST_METHOD)
-				time.sleep(1)
+				if (latencyTest[0] != 0):
+					time.sleep(1)
+					testRes = st.startTest(TEST_METHOD)
+					_item["dspeed"] = testRes[0]
+					_item["maxDSpeed"] = testRes[1]
+					time.sleep(1)
+				else:
+					_item["dspeed"] = 0
+					_item["maxDSpeed"] = 0
 				ssr.stopSsr()
 				time.sleep(1)
 			#	.print (latencyTest)
@@ -408,7 +427,16 @@ if (__name__ == "__main__"):
 				#	retryConfig.append(config)
 				else:
 					Result.append(_item)
-				logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d - Speed:%.2f" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000),_item["dspeed"] / 1024 / 1024) + "MB")
+				logger.info(
+					"%s - %s - Loss:%s%% - TCP_Ping:%d - AvgSpeed:%.2fMB/s - MaxSpeed:%.2fMB/s" % (
+						_item["group"],
+						_item["remarks"],
+						_item["loss"] * 100,
+						int(_item["ping"] * 1000),
+						_item["dspeed"] / 1024 / 1024,
+						_item["maxDSpeed"] / 1024 / 1024
+						)
+					)
 				#socks2httpServer.shutdown()
 				#logger.debug("Socks2HTTP Server already shutdown.")
 			except Exception:
@@ -442,6 +470,7 @@ if (__name__ == "__main__"):
 						for s in range(0,len(Result)):
 							if (r["remarks"] == Result[s]["remarks"]):
 								Result[s]["dspeed"] = r["dspeed"]
+								Result[s]["maxDSpeed"] = r["maxDSpeed"]
 								Result[s]["ping"] = r["ping"]
 								Result[s]["loss"] = r["loss"]
 								break
@@ -459,6 +488,7 @@ if (__name__ == "__main__"):
 			_item["loss"] = 1 - latencyTest[1]
 			_item["ping"] = latencyTest[0]
 			_item["dspeed"] = -1
+			_item["maxDSpeed"] -1
 			Result.append(_item)
 			logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000)))
 			config = ssrp.getNextConfig()
