@@ -319,10 +319,10 @@ if (__name__ == "__main__"):
 	if (not SKIP_COMFIRMATION):
 		if (TEST_MODE == "TCP_PING"):
 			logger.info("Test mode : tcp ping only.")
-			print("Your test mode is tcp ping only.")
+		#	print("Your test mode is tcp ping only.")
 		else:
 			logger.info("Test mode : speed and tcp ping.\nTest method : %s." % TEST_METHOD)
-			print("Your test mode : speed and tcp ping.\nTest method : %s." % TEST_METHOD)
+		#	print("Your test mode : speed and tcp ping.\nTest method : %s." % TEST_METHOD)
 		ans = input("Before the test please confirm the nodes,Ctrl-C to exit. (Y/N)")
 		if (ans == "Y"):
 			pass

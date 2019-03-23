@@ -58,17 +58,21 @@ def exportAsPng(result):
 	dspeedRightPosition = tcpPingRightPosition + otherWeight
 	maxDSpeedRightPosition = dspeedRightPosition + otherWeight
 
-	resultImg = Image.new("RGB",(maxDSpeedRightPosition,imageHeight + 30),(255,255,255))
+	newImageHeight = imageHeight + 30
+	resultImg = Image.new("RGB",(maxDSpeedRightPosition,newImageHeight),(255,255,255))
 	print(1)
 	draw = ImageDraw.Draw(resultImg)
 
-	draw.line((0,0,0,imageHeight - 1),fill=(127,127,127),width=1)
+	draw.line((0,0,0,newImageHeight - 1),fill=(127,127,127),width=1)
 	draw.line((groupRightPosition,0,groupRightPosition,imageHeight - 1),fill=(127,127,127),width=1)
 	draw.line((remarkRightPosition,0,remarkRightPosition,imageHeight - 1),fill=(127,127,127),width=1)
 	draw.line((lossRightPosition,0,lossRightPosition,imageHeight - 1),fill=(127,127,127),width=1)
 	draw.line((tcpPingRightPosition,0,tcpPingRightPosition,imageHeight - 1),fill=(127,127,127),width=1)
 	draw.line((dspeedRightPosition,0,dspeedRightPosition,imageHeight - 1),fill=(127,127,127),width=1)
+	draw.line((maxDSpeedRightPosition,0,maxDSpeedRightPosition,newImageHeight - 1),fill=(127,127,127),width=1)
 	
+	draw.line((0,0,maxDSpeedRightPosition - 1,0),fill=(127,127,127),width=1)
+
 	draw.text((5,4),"Group",font=resultFont,fill=(0,0,0))
 	draw.text((groupRightPosition + 5,4),"Remarks",font=resultFont,fill=(0,0,0))
 	draw.text((remarkRightPosition + 5,4),"Loss",font=resultFont,fill=(0,0,0))
@@ -109,6 +113,7 @@ def exportAsPng(result):
 			draw.text((dspeedRightPosition + 5,30 * i + 30 + 1),parseSpeed(maxSpeed),font=resultFont,fill=(0,0,0))
 	
 	draw.text((5,imageHeight + 4),"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),font=resultFont,fill=(0,0,0))
+	draw.line((0,newImageHeight - 1,maxDSpeedRightPosition,newImageHeight - 1),fill=(127,127,127),width=1)
 	filename = time.strftime("%Y-%m-%d-%H-%M-%S", generatedTime) + ".png"
 	resultImg.save(filename)
 	logger.info("Result image saved as %s" % filename)
