@@ -39,6 +39,8 @@ def setProxyPort(port):
 def restoreSocket():
 	socket.socket = DEFAULT_SOCKET
 
+
+
 def parseLocation():
 	try:
 		rep = requests.get("http://ip-api.com/json",proxies = {
@@ -48,14 +50,14 @@ def parseLocation():
 		tmp = rep.json()
 		if (tmp["status"] == "success"):
 			logger.info("Server Country Code : %s,Timezone : %s" % (tmp["countryCode"],tmp["timezone"]))
-			return (True,tmp["countryCode"],tmp["timezone"])
+			return (True,tmp["countryCode"],tmp["timezone"],tmp["isp"])
 	except:
 		logger.exception("Parse location failed.")
 		try:
 			logger.error(rep.content)
 		except:
 			pass
-	return(False,"ALL","ALL")
+	return(False,"ALL","ALL","ALL")
 
 def speedTestThread(link):
 	global TOTAL_RECEIVED,MAX_TIME,DELTA_RECEIVED
@@ -63,6 +65,7 @@ def speedTestThread(link):
 	host = link[:link.find("/")]
 	requestUri = link[link.find("/"):]
 	logger.debug("\nLink: %s\nHost: %s\nRequestUri: %s" % (link,host,requestUri))
+	#print(link,MAX_FILE_SIZE)
 	try:
 		s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 		try:
@@ -92,44 +95,60 @@ def speedTestThread(link):
 		logger.exception("")
 		return 0
 
+def getDownloadLink(tag = None):
+	cfg = config["speedtestsocket"]["downloadLinks"]
+	defaultCfg = {}
+	for link in cfg:
+		if (link["tag"].strip() == "Default"):
+			defaultCfg = link
+			break
+	if (not tag):
+		return(defaultCfg["link"],defaultCfg["fileSize"])
+	for link in cfg:
+		if(link["tag"].strip() == tag.strip()):
+			logger.info("Tag matched : %s" % tag)
+			return (link["link"],link["fileSize"])
+	logger.warn("Tag %s not matched,using default." % tag)
+	return(defaultCfg["link"],defaultCfg["fileSize"])
+
+def checkRule():
+	try:
+		res = (False,"ALL","ALL","ALL")
+		res = parseLocation()
+		if (not res[0]):
+			logger.error("Parse location failed,using default.")
+			return getDownloadLink()
+		countryCode = res[1].strip()
+		cotinent = res[2].strip()
+		isp = res[3].strip()
+		rules = config["speedtestsocket"]["rules"]
+		for rule in rules:
+			if (rule["mode"] == "match_isp"):
+				if (isp in rule["ISP"].strip()):
+					logger.info("ISP %s matched." % isp)
+					return getDownloadLink(rule["tag"])
+			elif(rule["mode"] == "match_location"):
+				logger.debug("Match mode : Location")
+				for code in rule.get("countries",[]): 
+					if (res[1].strip() == code.strip()):
+						logger.info("Country code %s matched." % res[1])
+						return getDownloadLink(rule["tag"])
+				if (rule.get("continent","") != "" and rule["continent"].strip() in res[2].strip()):
+					logger.info("Timezone %s matched." % res[2])
+					return getDownloadLink(rule["tag"])
+		logger.info("No rule matched.using default.")
+		return getDownloadLink()
+	except:
+		logger.exception("Match Rule Error,using default.")
+		return getDownloadLink()
+
 def speedTestSocket(port):
 	global EXIT_FLAG,LOCAL_PORT,MAX_TIME,TOTAL_RECEIVED,MAX_FILE_SIZE,DELTA_RECEIVED
 	LOCAL_PORT = port
-	useDefault = config["speedtestsocket"]["useDefault"]
-	res = (False,"ALL","ALL")
-	if (not useDefault):
-		res = parseLocation()
-	link = ""
-	if (not useDefault and res[0]):
-		isFound = False
-		for _item in config["speedtestsocket"]["downloadLinks"]:
-		#	logger.debug(_item)
-			for code in _item["countries"]:
-				if (res[1].strip() == code.strip()):
-					link = _item["link"]
-					MAX_FILE_SIZE = _item["fileSize"] * 1024 * 1024
-					isFound = True
-					logger.info("Server location : %s, using download link : %s" % (res[1],link))
-					break
-			if (_item["Continent"] != "" and _item["Continent"].strip() in res[2].strip()):
-				link = _item["link"]
-				logger.info("Server timezone : %s, using download link : %s" % (res[2],link))
-				MAX_FILE_SIZE = _item["fileSize"] * 1024 * 1024
-				isFound = True
-			if (isFound):
-				break
-		if (not isFound):
-			logger.warn("No download link match,using default.")
-			link = config["speedtestsocket"]["defaultDownloadLink"]["link"]
-			MAX_FILE_SIZE = config["speedtestsocket"]["defaultDownloadLink"]["fileSize"] * 1024 * 1024
-	elif (useDefault):
-		link = config["speedtestsocket"]["defaultDownloadLink"]["link"]
-		MAX_FILE_SIZE = config["speedtestsocket"]["defaultDownloadLink"]["fileSize"] * 1024 * 1024
-		logger.info("Using default download link %s" % link)
-	else:
-		logger.warn("Parse location failed, using default link.")
-		link = config["speedtestsocket"]["defaultDownloadLink"]["link"]
-		MAX_FILE_SIZE = config["speedtestsocket"]["defaultDownloadLink"]["fileSize"] * 1024 * 1024
+	res = checkRule()
+	link = res[0]
+	MAX_FILE_SIZE = res[1] * 1024 * 1024
+	#print(link,MAX_FILE_SIZE)
 	#return 0
 	#logger.debug("Actived threads: %d" % threading.active_count())
 	MAX_TIME = 0
@@ -155,10 +174,10 @@ def speedTestSocket(port):
 	#	if (maxSpeed not in maxSpeedList):
 		maxSpeedList.append(currentSpeed)
 	#	print("maxSpeed : %f" % maxSpeed)
-		print("\r[" + "="*i + "> [%d%%/100%%] [%.2f MB/s] [%.2f MB/s]" % (int(i * 5),currentSpeed / 1024 / 1024,maxSpeed / 1024 / 1024),end='')
+		print("\r[" + "="*i + "> [%d%%/100%%] [%.2f MB/s]" % (int(i * 5),currentSpeed / 1024 / 1024),end='')
 		if (EXIT_FLAG):
 			break
-	print("\r[" + "="*i + "] [100%%/100%%] [%.2f MB/s] [%.2f MB/s]" % (currentSpeed / 1024 / 1024,maxSpeed / 1024 / 1024),end='\n')
+	print("\r[" + "="*i + "] [100%%/100%%] [%.2f MB/s]" % (currentSpeed / 1024 / 1024),end='\n')
 	EXIT_FLAG = True
 	for i in range(0,10):
 		time.sleep(0.1)
@@ -171,12 +190,15 @@ def speedTestSocket(port):
 	maxSpeedList.sort()
 	if (len(maxSpeedList) > 8):
 		msum = 0
-		for i in range(len(maxSpeedList) - 8,len(maxSpeedList) - 2):
+		for i in range(8,len(maxSpeedList) - 2):
 			msum += maxSpeedList[i]
-		maxSpeed = (msum / 6)
+		maxSpeed = (msum / (len(maxSpeedList) - 2 - 8))
+	else:
+		maxSpeed = currentSpeed
 #	print(maxSpeed / 1024 / 1024)
 	return (TOTAL_RECEIVED / MAX_TIME,maxSpeed)
 
 if (__name__ == "__main__"):
-	print(speedTestSocket(1080)[0] / 1024 / 1024)
+	res = speedTestSocket(1080)
+	print(res[0] / 1024 / 1024,res[1] / 1024 / 1024)
 
