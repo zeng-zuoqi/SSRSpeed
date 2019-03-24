@@ -4,7 +4,7 @@ config = {
 	"speedtestsocket":{
 		"maxThread":8,	#Thread count
 		"buffer":4096,	#Buffer size,bytes
-		"useDefault":True,
+		"skipRuleMatch":False,
 		"rules":[
 			{
 				"mode":"match_isp", #match_isp or match_location

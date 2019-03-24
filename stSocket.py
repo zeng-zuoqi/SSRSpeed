@@ -144,7 +144,11 @@ def checkRule():
 def speedTestSocket(port):
 	global EXIT_FLAG,LOCAL_PORT,MAX_TIME,TOTAL_RECEIVED,MAX_FILE_SIZE,DELTA_RECEIVED
 	LOCAL_PORT = port
-	res = checkRule()
+	if (not config["speedtestsocket"]["skipRuleMatch"]):
+		res = checkRule()
+	else:
+		logger.info("Skip rule match.")
+		res = getDownloadLink()
 	link = res[0]
 	MAX_FILE_SIZE = res[1] * 1024 * 1024
 	#print(link,MAX_FILE_SIZE)

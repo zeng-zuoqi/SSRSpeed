@@ -11,7 +11,7 @@ import logging
 
 from shadowsocksR import SSRParse,SSR
 from speedTest import SpeedTest,setInfo
-from exportResult import exportAsPng,exportAsJson
+from exportResult import ExportResult
 import importResult
 #from socks2http import ThreadingTCPServer,SocksProxy
 #from socks2http import setUpstreamPort
@@ -28,7 +28,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.0 beta"
+VERSION = "2.1 alpha"
 LOCAL_ADDRESS = "127.0.0.1"
 LOCAL_PORT = 1087
 
@@ -170,13 +170,14 @@ def setOpts(parser):
 		)
 
 def export(Result,exType):
+	er = ExportResult()
 	if (exType.lower() == "png"):
-		exportAsPng(Result)
+		er.exportAsPng(Result)
 	elif ((exType.lower() == "json") or (exType == "")):
-		exportAsJson(Result)
+		er.exportAsJson(Result)
 	else:
 		logger.error("Unsupported export type %s" % exType)
-		exportAsJson(Result)
+		er.exportAsJson(Result)
 
 def checkPlatform():
 		tmp = platform.platform()
@@ -354,6 +355,10 @@ if (__name__ == "__main__"):
 		time.sleep(1)
 		while(True):
 			config = ssr.getCurrrentConfig()
+			if (not config):
+				logger.error("Get current config failed.")
+				time.sleep(2)
+				continue
 			_item = {}
 			_item["group"] = config["group"]
 			_item["remarks"] = config["remarks"]
@@ -362,7 +367,7 @@ if (__name__ == "__main__"):
 			try:
 				st = SpeedTest()
 				latencyTest = st.tcpPing(config["server"],config["server_port"])
-				if (latencyTest[0] != 0):
+				if (int(latencyTest[0] * 1000) != 0):
 					time.sleep(1)
 					testRes = st.startTest(TEST_METHOD)
 					_item["dspeed"] = testRes[0]
