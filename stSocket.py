@@ -43,14 +43,13 @@ def restoreSocket():
 
 def parseLocation():
 	try:
-		rep = requests.get("http://ip-api.com/json",proxies = {
+		rep = requests.get("https://api.ip.sb/geoip",proxies = {
 			"http":"socks5h://127.0.0.1:%d" % LOCAL_PORT,
 			"https":"socks5h://127.0.0.1:%d" % LOCAL_PORT
 		})
 		tmp = rep.json()
-		if (tmp["status"] == "success"):
-			logger.info("Server Country Code : %s,Timezone : %s" % (tmp["countryCode"],tmp["timezone"]))
-			return (True,tmp["countryCode"],tmp["timezone"],tmp["isp"])
+		logger.info("Server Country Code : %s,Timezone : %s" % (tmp["country_code"],tmp["timezone"]))
+		return (True,tmp["country_code"],tmp["timezone"],tmp["organization"])
 	except:
 		logger.exception("Parse location failed.")
 		try:
@@ -188,11 +187,11 @@ def speedTestSocket(port):
 		return(0,0)
 	restoreSocket()
 	maxSpeedList.sort()
-	if (len(maxSpeedList) > 8):
+	if (len(maxSpeedList) > 12):
 		msum = 0
-		for i in range(8,len(maxSpeedList) - 2):
+		for i in range(12,len(maxSpeedList) - 2):
 			msum += maxSpeedList[i]
-		maxSpeed = (msum / (len(maxSpeedList) - 2 - 8))
+		maxSpeed = (msum / (len(maxSpeedList) - 2 - 4))
 	else:
 		maxSpeed = currentSpeed
 #	print(maxSpeed / 1024 / 1024)
