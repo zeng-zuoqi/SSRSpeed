@@ -40,10 +40,11 @@ def restoreSocket():
 
 def parseLocation():
 	try:
+		logger.info("Starting parse location.")
 		rep = requests.get("https://api.ip.sb/geoip",proxies = {
 			"http":"socks5h://127.0.0.1:%d" % LOCAL_PORT,
 			"https":"socks5h://127.0.0.1:%d" % LOCAL_PORT
-		})
+		},timeout=5)
 		tmp = rep.json()
 		logger.info("Server Country Code : %s,Timezone : %s" % (tmp["country_code"],tmp["timezone"]))
 		return (True,tmp["country_code"],tmp["timezone"],tmp["organization"])
@@ -67,6 +68,7 @@ def speedTestThread(link):
 		s.settimeout(12)
 		try:
 			s.connect((host,80))
+			logger.debug("Connected to %s" % host)
 		except socks.GeneralProxyError:
 			pass
 		except socket.timeout:
@@ -76,6 +78,7 @@ def speedTestThread(link):
 			LOCK.release()
 			return
 		s.send(b"GET %b HTTP/1.1\r\nHost: %b\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36\r\n\r\n" % (requestUri.encode("utf-8"),host.encode("utf-8")))
+		logger.debug("Request sent.")
 		startTime = time.time()
 		received = 0
 		while True:
@@ -87,9 +90,12 @@ def speedTestThread(link):
 			lxx = len(xx)
 		#	received += len(xx)
 			received += lxx
+			TR = 0
 			LOCK.acquire()
 			TOTAL_RECEIVED += lxx
+			TR = TOTAL_RECEIVED
 			LOCK.release()
+			logger.debug(TR)
 			if (received >= MAX_FILE_SIZE or EXIT_FLAG):
 				break
 		endTime = time.time()
