@@ -40,6 +40,7 @@ class SSR(object):
 		tmpConf["token"]["SpeedTest"] = "SpeedTest"
 		tmpConf["localPort"] = LOCAL_PORT
 		tmpConf["index"] = 0
+		tmpConf["proxyRuleMode"] = 2
 		tmpConf["configs"] = []
 		for iitem in self.__configList:
 			iitem["protocolparam"] = iitem["protocol_param"]
@@ -61,6 +62,7 @@ class SSR(object):
 		#	logger.debug(rep.content)
 			return rep.json()
 		else:
+			logger.debug(rep.status_code)
 			return False
 
 	def nextWinConf(self):
