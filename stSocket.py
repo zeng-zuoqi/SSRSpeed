@@ -64,15 +64,26 @@ def speedTestThread(link):
 	#print(link,MAX_FILE_SIZE)
 	try:
 		s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+		s.settimeout(12)
 		try:
 			s.connect((host,80))
 		except socks.GeneralProxyError:
 			pass
+		except socket.timeout:
+			logger.error("Connect to %s timeout." % host)
+			LOCK.acquire()
+			TOTAL_RECEIVED += 0
+			LOCK.release()
+			return
 		s.send(b"GET %b HTTP/1.1\r\nHost: %b\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36\r\n\r\n" % (requestUri.encode("utf-8"),host.encode("utf-8")))
 		startTime = time.time()
 		received = 0
 		while True:
-			xx = s.recv(BUFFER)
+			try:
+				xx = s.recv(BUFFER)
+			except socket.timeout:
+				logger.error("Receive data timeout.")
+				break
 			lxx = len(xx)
 		#	received += len(xx)
 			received += lxx
@@ -82,10 +93,13 @@ def speedTestThread(link):
 			if (received >= MAX_FILE_SIZE or EXIT_FLAG):
 				break
 		endTime = time.time()
+		deltaTime = endTime - startTime
+		if (deltaTime >= 12):
+			deltaTime = 11
 		s.close()
 		LOCK.acquire()
 	#	TOTAL_RECEIVED += received
-		MAX_TIME = max(MAX_TIME,endTime - startTime)
+		MAX_TIME = max(MAX_TIME,deltaTime)
 		LOCK.release()
 	except:
 		logger.exception("")
