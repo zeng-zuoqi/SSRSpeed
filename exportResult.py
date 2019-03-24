@@ -8,6 +8,8 @@ import time
 import logging
 logger = logging.getLogger("Sub")
 
+from config import config
+
 '''
 	resultJson
 		{
@@ -17,12 +19,14 @@ logger = logging.getLogger("Sub")
 			"ping":0.014,
 			"gping":0.011,
 			"dspeed":12435646 #Bytes
+			"maxDSpeed":12435646 #Bytes
 		}
 '''
 
 class ExportResult(object):
 	def __init__(self):
-		self.hideMaxSpeed = False
+		self.__config = config["exportResult"]
+		self.hideMaxSpeed = self.__config["hideMaxSpeed"]
 
 	def __getMaxWeight(self,result,font):
 		draw = ImageDraw.Draw(Image.new("RGB",(1,1),(255,255,255)))
@@ -41,7 +45,7 @@ class ExportResult(object):
 		generatedTime = time.localtime()
 
 		imageHeight = len(result) * 30 + 30
-		weight = __getMaxWeight(result,resultFont)
+		weight = self.__getMaxWeight(result,resultFont)
 		groupWeight = weight[0]
 		remarkWeight = weight[1]
 		if (groupWeight < 60):
@@ -57,8 +61,13 @@ class ExportResult(object):
 		dspeedRightPosition = tcpPingRightPosition + otherWeight
 		maxDSpeedRightPosition = dspeedRightPosition + otherWeight
 
+		if (not self.hideMaxSpeed):
+			imageRightPosition = maxDSpeedRightPosition
+		else:
+			imageRightPosition = dspeedRightPosition
+
 		newImageHeight = imageHeight + 30
-		resultImg = Image.new("RGB",(maxDSpeedRightPosition,newImageHeight),(255,255,255))
+		resultImg = Image.new("RGB",(imageRightPosition,newImageHeight),(255,255,255))
 		draw = ImageDraw.Draw(resultImg)
 
 		draw.line((0,0,0,newImageHeight - 1),fill=(127,127,127),width=1)
@@ -67,21 +76,23 @@ class ExportResult(object):
 		draw.line((lossRightPosition,0,lossRightPosition,imageHeight - 1),fill=(127,127,127),width=1)
 		draw.line((tcpPingRightPosition,0,tcpPingRightPosition,imageHeight - 1),fill=(127,127,127),width=1)
 		draw.line((dspeedRightPosition,0,dspeedRightPosition,imageHeight - 1),fill=(127,127,127),width=1)
-		draw.line((maxDSpeedRightPosition,0,maxDSpeedRightPosition,newImageHeight - 1),fill=(127,127,127),width=1)
+		draw.line((imageRightPosition,0,imageRightPosition,newImageHeight - 1),fill=(127,127,127),width=1)
 	
-		draw.line((0,0,maxDSpeedRightPosition - 1,0),fill=(127,127,127),width=1)
+		draw.line((0,0,imageRightPosition - 1,0),fill=(127,127,127),width=1)
 
 		draw.text((5,4),"Group",font=resultFont,fill=(0,0,0))
 		draw.text((groupRightPosition + 5,4),"Remarks",font=resultFont,fill=(0,0,0))
 		draw.text((remarkRightPosition + 5,4),"Loss",font=resultFont,fill=(0,0,0))
 		draw.text((lossRightPosition + 5,4),"Ping",font=resultFont,fill=(0,0,0))
 		draw.text((tcpPingRightPosition + 5,4),"AvgSpeed",font=resultFont,fill=(0,0,0))
-		draw.text((dspeedRightPosition + 5,4),"MaxSpeed",font=resultFont,fill=(0,0,0))
+
+		if (not self.hideMaxSpeed):
+			draw.text((dspeedRightPosition + 5,4),"MaxSpeed",font=resultFont,fill=(0,0,0))
 	
-		draw.line((0,30,maxDSpeedRightPosition - 1,30),fill=(127,127,127),width=1)
+		draw.line((0,30,imageRightPosition - 1,30),fill=(127,127,127),width=1)
 
 		for i in range(0,len(result)):
-			draw.line((0,30 * i + 60,maxDSpeedRightPosition,30 * i + 60),fill=(127,127,127),width=1)
+			draw.line((0,30 * i + 60,imageRightPosition,30 * i + 60),fill=(127,127,127),width=1)
 			item = result[i]
 
 			group = item["group"]
@@ -101,17 +112,18 @@ class ExportResult(object):
 				draw.text((tcpPingRightPosition + 5,30 * i + 30 + 1),"N/A",font=resultFont,fill=(0,0,0))
 			else:
 				draw.rectangle((tcpPingRightPosition + 1,30 * i + 30 + 1,dspeedRightPosition - 1,30 * i + 60 -1),self.__getColor(speed))
-				draw.text((tcpPingRightPosition + 5,30 * i + 30 + 1),__self.__parseSpeed(speed),font=resultFont,fill=(0,0,0))
+				draw.text((tcpPingRightPosition + 5,30 * i + 30 + 1),self.__parseSpeed(speed),font=resultFont,fill=(0,0,0))
 
-			maxSpeed = item["maxDSpeed"]
-			if (maxSpeed == -1):
-				draw.text((dspeedRightPosition + 5,30 * i + 30 + 1),"N/A",font=resultFont,fill=(0,0,0))
-			else:
-				draw.rectangle((dspeedRightPosition + 1,30 * i + 30 + 1,maxDSpeedRightPosition - 1,30 * i + 60 -1),self.__getColor(maxSpeed))
-				draw.text((dspeedRightPosition + 5,30 * i + 30 + 1),__self.__parseSpeed(maxSpeed),font=resultFont,fill=(0,0,0))
+			if (not self.hideMaxSpeed):
+				maxSpeed = item["maxDSpeed"]
+				if (maxSpeed == -1):
+					draw.text((dspeedRightPosition + 5,30 * i + 30 + 1),"N/A",font=resultFont,fill=(0,0,0))
+				else:
+					draw.rectangle((dspeedRightPosition + 1,30 * i + 30 + 1,maxDSpeedRightPosition - 1,30 * i + 60 -1),self.__getColor(maxSpeed))
+					draw.text((dspeedRightPosition + 5,30 * i + 30 + 1),self.__parseSpeed(maxSpeed),font=resultFont,fill=(0,0,0))
 	
 		draw.text((5,imageHeight + 4),"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),font=resultFont,fill=(0,0,0))
-		draw.line((0,newImageHeight - 1,maxDSpeedRightPosition,newImageHeight - 1),fill=(127,127,127),width=1)
+		draw.line((0,newImageHeight - 1,imageRightPosition,newImageHeight - 1),fill=(127,127,127),width=1)
 		filename = time.strftime("%Y-%m-%d-%H-%M-%S", generatedTime) + ".png"
 		resultImg.save(filename)
 		logger.info("Result image saved as %s" % filename)

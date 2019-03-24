@@ -16,6 +16,8 @@ import importResult
 #from socks2http import ThreadingTCPServer,SocksProxy
 #from socks2http import setUpstreamPort
 
+from config import config
+
 loggerList = []
 loggerSub = logging.getLogger("Sub")
 logger = logging.getLogger(__name__)
@@ -314,6 +316,7 @@ if (__name__ == "__main__"):
 		ssrp.readGuiConfig(CONFIG_FILENAME)
 	else:
 		ssrp.readSubscriptionConfig(CONFIG_URL)
+	ssrp.excludeNode([],[],config["excludeRemarks"])
 	ssrp.filterNode(FILTER_KEYWORD,FILTER_GROUP_KRYWORD,FILTER_REMARK_KEYWORD)
 	ssrp.excludeNode(EXCLUDE_KEYWORD,EXCLUDE_GROUP_KEYWORD,EXCLUDE_REMARK_KEWORD)
 	ssrp.printNode()

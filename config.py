@@ -1,6 +1,14 @@
 #coding:utf-8
 
 config = {
+	"excludeRemarks":[
+		"剩余流量",
+		"到期时间",
+		"过期时间"
+	],
+	"exportResult":{
+		"hideMaxSpeed":True
+	},
 	"speedtestsocket":{
 		"maxThread":8,	#Thread count
 		"buffer":4096,	#Buffer size,bytes

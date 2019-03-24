@@ -29,7 +29,6 @@ EXIT_FLAG = False
 LOCAL_PORT = 1080
 LOCK = threading.Lock()
 TOTAL_RECEIVED = 0
-DELTA_RECEIVED = 0
 MAX_TIME = 0
 
 def setProxyPort(port):
@@ -38,8 +37,6 @@ def setProxyPort(port):
 
 def restoreSocket():
 	socket.socket = DEFAULT_SOCKET
-
-
 
 def parseLocation():
 	try:
@@ -59,7 +56,7 @@ def parseLocation():
 	return(False,"ALL","ALL","ALL")
 
 def speedTestThread(link):
-	global TOTAL_RECEIVED,MAX_TIME,DELTA_RECEIVED
+	global TOTAL_RECEIVED,MAX_TIME
 	link = link.replace("https://","").replace("http://","")
 	host = link[:link.find("/")]
 	requestUri = link[link.find("/"):]
@@ -141,8 +138,15 @@ def checkRule():
 		logger.exception("Match Rule Error,using default.")
 		return getDownloadLink()
 
+def calcMaxSpeed(maxSpeed,deltaRecv,deltaTime):
+	if (maxSpeed == 0):
+		return (deltaRecv / deltaTime * 0.7)
+	else:
+		a = 2 / (1+32)
+		return (0.5 + maxSpeed * (1 - a) + a * deltaRecv / deltaTime)
+
 def speedTestSocket(port):
-	global EXIT_FLAG,LOCAL_PORT,MAX_TIME,TOTAL_RECEIVED,MAX_FILE_SIZE,DELTA_RECEIVED
+	global EXIT_FLAG,LOCAL_PORT,MAX_TIME,TOTAL_RECEIVED,MAX_FILE_SIZE
 	LOCAL_PORT = port
 	if (not config["speedtestsocket"]["skipRuleMatch"]):
 		res = checkRule()
@@ -166,17 +170,20 @@ def speedTestSocket(port):
 	maxSpeed = 0
 	currentSpeed = 0
 	OLD_RECEIVED = 0
+	DELTA_RECEIVED = 0
 	for i in range(1,21):
 		time.sleep(0.5)
 		LOCK.acquire()
 	#	print("Delta Received : %d" % DELTA_RECEIVED)
-		currentSpeed = (TOTAL_RECEIVED - OLD_RECEIVED) / 0.5
+		DELTA_RECEIVED = TOTAL_RECEIVED - OLD_RECEIVED
 		OLD_RECEIVED = TOTAL_RECEIVED
 		LOCK.release()
-		maxSpeed = max(maxSpeed,currentSpeed)
+		currentSpeed = DELTA_RECEIVED / 0.5
+	#	maxSpeed = calcMaxSpeed(maxSpeed,DELTA_RECEIVED,0.5)
+	#	maxSpeed = max(maxSpeed,currentSpeed)
 	#	if (maxSpeed not in maxSpeedList):
 		maxSpeedList.append(currentSpeed)
-	#	print("maxSpeed : %f" % maxSpeed)
+	#	print("maxSpeed : %.2f" % (maxSpeed / 1024 / 1024))
 		print("\r[" + "="*i + "> [%d%%/100%%] [%.2f MB/s]" % (int(i * 5),currentSpeed / 1024 / 1024),end='')
 		if (EXIT_FLAG):
 			break
@@ -191,11 +198,12 @@ def speedTestSocket(port):
 		return(0,0)
 	restoreSocket()
 	maxSpeedList.sort()
+#	print (maxSpeedList)
 	if (len(maxSpeedList) > 12):
 		msum = 0
 		for i in range(12,len(maxSpeedList) - 2):
 			msum += maxSpeedList[i]
-		maxSpeed = (msum / (len(maxSpeedList) - 2 - 4))
+		maxSpeed = (msum / (len(maxSpeedList) - 2 - 12))
 	else:
 		maxSpeed = currentSpeed
 #	print(maxSpeed / 1024 / 1024)

@@ -198,6 +198,7 @@ class SSRParse(object):
 				for item in self.__configList:
 					if (self.__checkInList(item,_list)):continue
 					if ((kw in item["group"]) or (kw in item["remarks"])):
+						print(item["remarks"])
 						_list.append(item)
 			self.__configList = _list
 		self.__filterGroup(gkwl)
