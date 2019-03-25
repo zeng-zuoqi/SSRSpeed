@@ -70,7 +70,11 @@ def speedTestThread(link):
 			s.connect((host,80))
 			logger.debug("Connected to %s" % host)
 		except socks.GeneralProxyError:
-			pass
+			logger.exception("Can't connect to proxy!")
+			LOCK.acquire()
+			TOTAL_RECEIVED += 0
+			LOCK.release()
+			return
 		except socket.timeout:
 			logger.error("Connect to %s timeout." % host)
 			LOCK.acquire()

@@ -39,7 +39,7 @@ class ExportResult(object):
 			maxRemarkWeight = max(maxRemarkWeight,draw.textsize(remark,font=font)[0])
 		return (maxGroupWeight + 10,maxRemarkWeight + 10)
 
-	def exportAsPng(self,result):
+	def exportAsPng(self,result,id=0):
 		resultFont = ImageFont.truetype("msyh.ttc",18)
 
 		generatedTime = time.localtime()
@@ -121,12 +121,19 @@ class ExportResult(object):
 				else:
 					draw.rectangle((dspeedRightPosition + 1,30 * i + 30 + 1,maxDSpeedRightPosition - 1,30 * i + 60 -1),self.__getColor(maxSpeed))
 					draw.text((dspeedRightPosition + 5,30 * i + 30 + 1),self.__parseSpeed(maxSpeed),font=resultFont,fill=(0,0,0))
-	
-		draw.text((5,imageHeight + 4),"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),font=resultFont,fill=(0,0,0))
-		draw.line((0,newImageHeight - 1,imageRightPosition,newImageHeight - 1),fill=(127,127,127),width=1)
-		filename = time.strftime("%Y-%m-%d-%H-%M-%S", generatedTime) + ".png"
-		resultImg.save(filename)
-		logger.info("Result image saved as %s" % filename)
+
+		if (id > 0):
+			draw.text((5,imageHeight + 4),"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", generatedTime) + ("-%d" % id),font=resultFont,fill=(0,0,0))
+			draw.line((0,newImageHeight - 1,imageRightPosition,newImageHeight - 1),fill=(127,127,127),width=1)
+			filename = time.strftime("%Y-%m-%d-%H-%M-%S", generatedTime) + "-%d.png" % id
+			resultImg.save(filename)
+			logger.info("Result image saved as %s" % filename)
+		else:
+			draw.text((5,imageHeight + 4),"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),font=resultFont,fill=(0,0,0))
+			draw.line((0,newImageHeight - 1,imageRightPosition,newImageHeight - 1),fill=(127,127,127),width=1)
+			filename = time.strftime("%Y-%m-%d-%H-%M-%S", generatedTime) + ".png"
+			resultImg.save(filename)
+			logger.info("Result image saved as %s" % filename)
 
 	def __parseSpeed(self,speed):
 		speed = speed / 1024 / 1024

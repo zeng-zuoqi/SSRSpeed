@@ -143,11 +143,11 @@ def setOpts(parser):
 		help="Skip node list confirmation before test."
 		)
 	parser.add_option(
-		"-e","--export",
+		"-s","--split",
 		action="store",
-		dest="export_file_type",
-		default="",
-		help="Export test result to json or png file,now supported 'png' or 'json'"
+		dest="split_count",
+		default="-1",
+		help="Set the number of nodes displayed in a single image when exporting images."
 		)
 	parser.add_option(
 		"-i","--import",
@@ -171,15 +171,25 @@ def setOpts(parser):
 		help="如题"
 		)
 
-def export(Result,exType):
+def export(Result,split = 0,exportOnly = False):
 	er = ExportResult()
-	if (exType.lower() == "png"):
-		er.exportAsPng(Result)
-	elif ((exType.lower() == "json") or (exType == "")):
+	if (not exportOnly):
 		er.exportAsJson(Result)
+	if (split > 0):
+		i = 0
+		id = 1
+		while (i < len(Result)):
+			_list = []
+			for j in range(0,split):
+				_list.append(Result[i])
+				i += 1
+				if (i >= len(Result)):
+					break
+			er.exportAsPng(_list,id)
+			id += 1
 	else:
-		logger.error("Unsupported export type %s" % exType)
-		er.exportAsJson(Result)
+		er.exportAsPng(Result)
+
 
 def checkPlatform():
 		tmp = platform.platform()
@@ -206,8 +216,8 @@ if (__name__ == "__main__"):
 	EXCLUDE_REMARK_KEWORD = []
 	TEST_METHOD = ""
 	TEST_MODE = ""
+	SPLIT_CNT = 0
 	SKIP_COMFIRMATION = False
-	EXPORT_TYPE = ""
 
 	parser = OptionParser(usage="Usage: %prog [options] arg1 arg2...",version="SSR Speed Tool " + VERSION)
 	setOpts(parser)
@@ -299,12 +309,12 @@ if (__name__ == "__main__"):
 		)
 	)
 
-	if (options.export_file_type):
-		EXPORT_TYPE = options.export_file_type.lower()
+	if (int(options.split_count) > 0):
+		SPLIT_CNT = int(options.split_count)
 
 	if (options.import_file and CONFIG_LOAD_MODE == 0):
 		IMPORT_FILENAME = options.import_file
-		export(importResult.importResult(IMPORT_FILENAME),EXPORT_TYPE)
+		export(importResult.importResult(IMPORT_FILENAME),SPLIT_CNT,True)
 		sys.exit(0)
 #	exit(0)
 
@@ -496,13 +506,13 @@ if (__name__ == "__main__"):
 			_item["loss"] = 1 - latencyTest[1]
 			_item["ping"] = latencyTest[0]
 			_item["dspeed"] = -1
-			_item["maxDSpeed"] -1
+			_item["maxDSpeed"] = -1
 			Result.append(_item)
 			logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000)))
 			config = ssrp.getNextConfig()
 			if (config == None):break
 
-	export(Result,EXPORT_TYPE)
+	export(Result,SPLIT_CNT)
 	time.sleep(1)
 	ssr.stopSsr()
 
