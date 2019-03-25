@@ -383,6 +383,9 @@ if (__name__ == "__main__"):
 				if (int(latencyTest[0] * 1000) != 0):
 					time.sleep(1)
 					testRes = st.startTest(TEST_METHOD)
+					if (int(testRes[0]) == 0):
+						logger.warn("Re-testing node.")
+						testRes = st.startTest(TEST_METHOD)
 					_item["dspeed"] = testRes[0]
 					_item["maxDSpeed"] = testRes[1]
 					time.sleep(1)
@@ -423,7 +426,7 @@ if (__name__ == "__main__"):
 			try:
 				st = SpeedTest()
 				latencyTest = st.tcpPing(config["server"],config["server_port"])
-				if (latencyTest[0] != 0):
+				if (int(latencyTest[0] * 1000) != 0):
 					time.sleep(1)
 					testRes = st.startTest(TEST_METHOD)
 					_item["dspeed"] = testRes[0]
@@ -439,10 +442,10 @@ if (__name__ == "__main__"):
 				_item["ping"] = latencyTest[0]
 			#	_item["gping"] = st.googlePing()
 				_item["gping"] = 0
-				if ((int(_item["dspeed"]) == 0) and (retryMode == False)):
-				#	retryList.append(_item)
+				if ((int(_item["dspeed"]) == 0) and (int(latencyTest[0] * 1000) != 0) and (retryMode == False)):
+					retryList.append(_item)
 					Result.append(_item)
-				#	retryConfig.append(config)
+					retryConfig.append(config)
 				else:
 					Result.append(_item)
 				logger.info(

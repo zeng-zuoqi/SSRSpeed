@@ -54,7 +54,7 @@ def parseLocation():
 			logger.error(rep.content)
 		except:
 			pass
-	return(False,"ALL","ALL","ALL")
+	return(False,"DEFAULT","DEFAULT","DEFAULT")
 
 def speedTestThread(link):
 	global TOTAL_RECEIVED,MAX_TIME
@@ -133,7 +133,7 @@ def getDownloadLink(tag = None):
 
 def checkRule():
 	try:
-		res = (False,"ALL","ALL","ALL")
+		res = (False,"DEFAULT","DEFAULT","DEFAULT")
 		res = parseLocation()
 		if (not res[0]):
 			logger.error("Parse location failed,using default.")
