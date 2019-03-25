@@ -39,7 +39,27 @@ class ExportResult(object):
 			maxRemarkWeight = max(maxRemarkWeight,draw.textsize(remark,font=font)[0])
 		return (maxGroupWeight + 10,maxRemarkWeight + 10)
 
+	def __deweighting(self,result):
+		_result = []
+		for r in result:
+			isFound = False
+			for i in range(0,len(_result)):
+				_r = _result[i]
+				if (_r["group"] == r["group"] and _r["remarks"] == r["remarks"]):
+					isFound = True
+					if (r["dspeed"] > _r["dspeed"]):
+						_result[i] = r
+					elif(r["ping"] < _r["ping"]):
+						_result[i] = r
+					break
+			if (not isFound):
+				_result.append(r)
+		return _result
+				
+
+
 	def exportAsPng(self,result,id=0):
+		result = self.__deweighting(result)
 		resultFont = ImageFont.truetype("msyh.ttc",18)
 
 		generatedTime = time.localtime()
@@ -158,6 +178,7 @@ class ExportResult(object):
 			return self.__mixColor((255,128,192),(255,0,0),(data-4*1024*1024)/((16-4)*1024*1024))
 
 	def exportAsJson(self,result):
+		result = self.__deweighting(result)
 		filename = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + ".json"
 		with open(filename,"w+",encoding="utf-8") as f:
 			f.writelines(json.dumps(result,sort_keys=True,indent=4,separators=(',',':')))
