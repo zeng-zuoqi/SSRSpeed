@@ -88,12 +88,12 @@ def speedTestThread(link):
 			lxx = len(xx)
 		#	received += len(xx)
 			received += lxx
-			TR = 0
+		#	TR = 0
 			LOCK.acquire()
 			TOTAL_RECEIVED += lxx
-			TR = TOTAL_RECEIVED
+		#	TR = TOTAL_RECEIVED
 			LOCK.release()
-			logger.debug(TR)
+		#	logger.debug(TR)
 			if (received >= MAX_FILE_SIZE or EXIT_FLAG):
 				break
 		endTime = time.time()
