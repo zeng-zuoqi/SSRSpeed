@@ -11,10 +11,12 @@ import logging
 
 from shadowsocksR import SSRParse,SSR
 from speedTest import SpeedTest,setInfo
-from exportResult import exportAsPng,exportAsJson
+from exportResult import ExportResult
 import importResult
 #from socks2http import ThreadingTCPServer,SocksProxy
 #from socks2http import setUpstreamPort
+
+from config import config
 
 loggerList = []
 loggerSub = logging.getLogger("Sub")
@@ -28,7 +30,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.0 beta"
+VERSION = "2.1 alpha"
 LOCAL_ADDRESS = "127.0.0.1"
 LOCAL_PORT = 1087
 
@@ -141,11 +143,11 @@ def setOpts(parser):
 		help="Skip node list confirmation before test."
 		)
 	parser.add_option(
-		"-e","--export",
+		"-s","--split",
 		action="store",
-		dest="export_file_type",
-		default="",
-		help="Export test result to json or png file,now supported 'png' or 'json'"
+		dest="split_count",
+		default="-1",
+		help="Set the number of nodes displayed in a single image when exporting images."
 		)
 	parser.add_option(
 		"-i","--import",
@@ -169,14 +171,25 @@ def setOpts(parser):
 		help="如题"
 		)
 
-def export(Result,exType):
-	if (exType.lower() == "png"):
-		exportAsPng(Result)
-	elif ((exType.lower() == "json") or (exType == "")):
-		exportAsJson(Result)
+def export(Result,split = 0,exportOnly = False):
+	er = ExportResult()
+	if (not exportOnly):
+		er.exportAsJson(Result)
+	if (split > 0):
+		i = 0
+		id = 1
+		while (i < len(Result)):
+			_list = []
+			for j in range(0,split):
+				_list.append(Result[i])
+				i += 1
+				if (i >= len(Result)):
+					break
+			er.exportAsPng(_list,id)
+			id += 1
 	else:
-		logger.error("Unsupported export type %s" % exType)
-		exportAsJson(Result)
+		er.exportAsPng(Result)
+
 
 def checkPlatform():
 		tmp = platform.platform()
@@ -203,8 +216,8 @@ if (__name__ == "__main__"):
 	EXCLUDE_REMARK_KEWORD = []
 	TEST_METHOD = ""
 	TEST_MODE = ""
+	SPLIT_CNT = 0
 	SKIP_COMFIRMATION = False
-	EXPORT_TYPE = ""
 
 	parser = OptionParser(usage="Usage: %prog [options] arg1 arg2...",version="SSR Speed Tool " + VERSION)
 	setOpts(parser)
@@ -296,12 +309,12 @@ if (__name__ == "__main__"):
 		)
 	)
 
-	if (options.export_file_type):
-		EXPORT_TYPE = options.export_file_type.lower()
+	if (int(options.split_count) > 0):
+		SPLIT_CNT = int(options.split_count)
 
 	if (options.import_file and CONFIG_LOAD_MODE == 0):
 		IMPORT_FILENAME = options.import_file
-		export(importResult.importResult(IMPORT_FILENAME),EXPORT_TYPE)
+		export(importResult.importResult(IMPORT_FILENAME),SPLIT_CNT,True)
 		sys.exit(0)
 #	exit(0)
 
@@ -313,16 +326,17 @@ if (__name__ == "__main__"):
 		ssrp.readGuiConfig(CONFIG_FILENAME)
 	else:
 		ssrp.readSubscriptionConfig(CONFIG_URL)
+	ssrp.excludeNode([],[],config["excludeRemarks"])
 	ssrp.filterNode(FILTER_KEYWORD,FILTER_GROUP_KRYWORD,FILTER_REMARK_KEYWORD)
 	ssrp.excludeNode(EXCLUDE_KEYWORD,EXCLUDE_GROUP_KEYWORD,EXCLUDE_REMARK_KEWORD)
 	ssrp.printNode()
 	if (not SKIP_COMFIRMATION):
 		if (TEST_MODE == "TCP_PING"):
 			logger.info("Test mode : tcp ping only.")
-			print("Your test mode is tcp ping only.")
+		#	print("Your test mode is tcp ping only.")
 		else:
 			logger.info("Test mode : speed and tcp ping.\nTest method : %s." % TEST_METHOD)
-			print("Your test mode : speed and tcp ping.\nTest method : %s." % TEST_METHOD)
+		#	print("Your test mode : speed and tcp ping.\nTest method : %s." % TEST_METHOD)
 		ans = input("Before the test please confirm the nodes,Ctrl-C to exit. (Y/N)")
 		if (ans == "Y"):
 			pass
@@ -343,31 +357,57 @@ if (__name__ == "__main__"):
 	retryList = []
 	retryConfig = []
 	retryMode = False
+	totalConfCount = 0
+	curConfCount = 0
 
 	ssr = SSR()
 
 	if (checkPlatform() == "Windows" and TEST_MODE == "ALL"):
 		configs = ssrp.getAllConfig()
+		totalConfCount = len(configs)
 		ssr.addConfig(configs)
 		ssr.startSsr()
 		setInfo(LOCAL_ADDRESS,LOCAL_PORT)
 		time.sleep(1)
 		while(True):
 			config = ssr.getCurrrentConfig()
+			curConfCount += 1
+			if (not config):
+				logger.error("Get current config failed.")
+				time.sleep(2)
+				continue
 			_item = {}
 			_item["group"] = config["group"]
 			_item["remarks"] = config["remarks"]
-			logger.info("Starting test for %s - %s" % (config["group"],config["remarks"]))
+			logger.info("Starting test for %s - %s [%d/%d]" % (config["group"],config["remarks"],curConfCount,totalConfCount))
 			time.sleep(1)
 			try:
 				st = SpeedTest()
 				latencyTest = st.tcpPing(config["server"],config["server_port"])
-				time.sleep(1)
-				_item["dspeed"] = st.startTest(TEST_METHOD)
-				time.sleep(1)
+				if (int(latencyTest[0] * 1000) != 0):
+					time.sleep(1)
+					testRes = st.startTest(TEST_METHOD)
+					if (int(testRes[0]) == 0):
+						logger.warn("Re-testing node.")
+						testRes = st.startTest(TEST_METHOD)
+					_item["dspeed"] = testRes[0]
+					_item["maxDSpeed"] = testRes[1]
+					time.sleep(1)
+				else:
+					_item["dspeed"] = 0
+					_item["maxDSpeed"] = 0
 				_item["loss"] = 1 - latencyTest[1]
 				_item["ping"] = latencyTest[0]
-				logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d - Speed:%.2f" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000),_item["dspeed"] / 1024 / 1024) + "MB")
+				logger.info(
+					"%s - %s - Loss:%s%% - TCP_Ping:%d - AvgSpeed:%.2fMB/s - MaxSpeed:%.2fMB/s" % (
+						_item["group"],
+						_item["remarks"],
+						_item["loss"] * 100,
+						int(_item["ping"] * 1000),
+						_item["dspeed"] / 1024 / 1024,
+						_item["maxDSpeed"] / 1024 / 1024
+						)
+					)
 				Result.append(_item)
 			except:
 				logger.exception("")
@@ -376,6 +416,7 @@ if (__name__ == "__main__"):
 				break
 			time.sleep(1)
 	elif(checkPlatform() == "Linux" and TEST_MODE == "ALL"):
+		totalConfCount = len(ssrp.getAllConfig())
 		config = ssrp.getNextConfig()
 		while(True):
 			setInfo(LOCAL_ADDRESS,LOCAL_PORT)
@@ -385,16 +426,21 @@ if (__name__ == "__main__"):
 			config["local_port"] = LOCAL_PORT
 			config["server_port"] = int(config["server_port"])
 			ssr.startSsr(config)
-			logger.info("Starting test for %s - %s" % (_item["group"],_item["remarks"]))
+			curConfCount += 1
+			logger.info("Starting test for %s - %s [%d/%d]" % (config["group"],config["remarks"],curConfCount,totalConfCount))
 			time.sleep(1)
 			try:
 				st = SpeedTest()
 				latencyTest = st.tcpPing(config["server"],config["server_port"])
-				time.sleep(1)
-				#_thread.start_new_thread(socks2httpServer.serve_forever,())
-				#logger.debug("socks2http server started.")
-				_item["dspeed"] = st.startTest(TEST_METHOD)
-				time.sleep(1)
+				if (int(latencyTest[0] * 1000) != 0):
+					time.sleep(1)
+					testRes = st.startTest(TEST_METHOD)
+					_item["dspeed"] = testRes[0]
+					_item["maxDSpeed"] = testRes[1]
+					time.sleep(1)
+				else:
+					_item["dspeed"] = 0
+					_item["maxDSpeed"] = 0
 				ssr.stopSsr()
 				time.sleep(1)
 			#	.print (latencyTest)
@@ -402,13 +448,22 @@ if (__name__ == "__main__"):
 				_item["ping"] = latencyTest[0]
 			#	_item["gping"] = st.googlePing()
 				_item["gping"] = 0
-				if ((int(_item["dspeed"]) == 0) and (retryMode == False)):
-				#	retryList.append(_item)
+				if ((int(_item["dspeed"]) == 0) and (int(latencyTest[0] * 1000) != 0) and (retryMode == False)):
+					retryList.append(_item)
 					Result.append(_item)
-				#	retryConfig.append(config)
+					retryConfig.append(config)
 				else:
 					Result.append(_item)
-				logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d - Speed:%.2f" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000),_item["dspeed"] / 1024 / 1024) + "MB")
+				logger.info(
+					"%s - %s - Loss:%s%% - TCP_Ping:%d - AvgSpeed:%.2fMB/s - MaxSpeed:%.2fMB/s" % (
+						_item["group"],
+						_item["remarks"],
+						_item["loss"] * 100,
+						int(_item["ping"] * 1000),
+						_item["dspeed"] / 1024 / 1024,
+						_item["maxDSpeed"] / 1024 / 1024
+						)
+					)
 				#socks2httpServer.shutdown()
 				#logger.debug("Socks2HTTP Server already shutdown.")
 			except Exception:
@@ -442,6 +497,7 @@ if (__name__ == "__main__"):
 						for s in range(0,len(Result)):
 							if (r["remarks"] == Result[s]["remarks"]):
 								Result[s]["dspeed"] = r["dspeed"]
+								Result[s]["maxDSpeed"] = r["maxDSpeed"]
 								Result[s]["ping"] = r["ping"]
 								Result[s]["loss"] = r["loss"]
 								break
@@ -459,12 +515,18 @@ if (__name__ == "__main__"):
 			_item["loss"] = 1 - latencyTest[1]
 			_item["ping"] = latencyTest[0]
 			_item["dspeed"] = -1
+			_item["maxDSpeed"] = -1
 			Result.append(_item)
 			logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000)))
 			config = ssrp.getNextConfig()
 			if (config == None):break
 
-	export(Result,EXPORT_TYPE)
-	ssr.stopSsr()
+	export(Result,SPLIT_CNT)
+	time.sleep(1)
+	if(checkPlatform() == "Windows"):
+		if (input("Do you want to turn off SSR-Win ? (Y/N)").lower() == "y"):
+			ssr.stopSsr()
+		else:
+			logger.info("Please manually turn off SSR-Win.")
 
 

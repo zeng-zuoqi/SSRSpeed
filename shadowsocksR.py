@@ -5,6 +5,7 @@ import requests
 import subprocess
 import platform
 import signal
+import socket
 import os
 import sys
 import logging
@@ -40,6 +41,7 @@ class SSR(object):
 		tmpConf["token"]["SpeedTest"] = "SpeedTest"
 		tmpConf["localPort"] = LOCAL_PORT
 		tmpConf["index"] = 0
+		tmpConf["proxyRuleMode"] = 2
 		tmpConf["configs"] = []
 		for iitem in self.__configList:
 			iitem["protocolparam"] = iitem["protocol_param"]
@@ -55,12 +57,21 @@ class SSR(object):
 			"token":"SpeedTest",
 			"action":"curConfig"
 		}
-		rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param)
+		try:
+			rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param,timeout=5)
+		except (requests.exceptions.Timeout,socket.timeout):
+			logger.error("Connect to ssr api server timeout.")
+			self.nextWinConf()
+			return False
+		except:
+			logger.exception("Get current config failed.")
+			return False
 		rep.encoding = "utf-8"
 		if (rep.status_code == 200):
 		#	logger.debug(rep.content)
 			return rep.json()
 		else:
+			logger.error(rep.status_code)
 			return False
 
 	def nextWinConf(self):
@@ -69,7 +80,14 @@ class SSR(object):
 			"token":"SpeedTest",
 			"action":"nextConfig"
 		}
-		rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param)
+		try:
+			rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param,timeout=5)
+		except (requests.exceptions.Timeout,socket.timeout):
+			logger.error("Connect to ssr api server timeout.")
+			return False
+		except:
+			logger.exception("Request next config failed.")
+			return False
 		if (rep.status_code == 403):
 			return False
 		else:
@@ -108,6 +126,7 @@ class SSR(object):
 				self.__process.terminate()
 			else:
 				self.__process.send_signal(signal.SIGQUIT)
+				self.__process.send_signal(signal.SIGINT)
 	#		print (self.__process.returncode)
 			self.__process = None
 			logger.info("ShadowsocksR terminated.")
@@ -122,6 +141,7 @@ class SSRParse(object):
 		decoded = b64plus.decode(link).decode("utf-8")
 		decoded1 = decoded.split("/?")[0].split(":")[::-1]
 		if (len(decoded1) != 6):
+			return None
 			addr = ""
 			for i in range(5,len(decoded1) - 1):
 				addr += decoded1[i] + ":"
@@ -197,6 +217,7 @@ class SSRParse(object):
 				for item in self.__configList:
 					if (self.__checkInList(item,_list)):continue
 					if ((kw in item["group"]) or (kw in item["remarks"])):
+					#	print(item["remarks"])
 						_list.append(item)
 			self.__configList = _list
 		self.__filterGroup(gkwl)
@@ -253,7 +274,9 @@ class SSRParse(object):
 			link = link.strip()
 			if (link[:6] != "ssr://"):continue
 			link = link[6:]
-			self.__configList.append(self.__parseLink(link))
+			cfg = self.__parseLink(link)
+			if (cfg):
+				self.__configList.append(cfg)
 
 		logger.info("Read %d node(s)" % len(self.__configList))
 			
