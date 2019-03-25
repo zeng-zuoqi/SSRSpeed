@@ -110,6 +110,7 @@ class SSR(object):
 				self.__process.terminate()
 			else:
 				self.__process.send_signal(signal.SIGQUIT)
+				self.__process.send_signal(signal.SIGINT)
 	#		print (self.__process.returncode)
 			self.__process = None
 			logger.info("ShadowsocksR terminated.")
