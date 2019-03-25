@@ -5,6 +5,7 @@ import requests
 import subprocess
 import platform
 import signal
+import socket
 import os
 import sys
 import logging
@@ -56,13 +57,21 @@ class SSR(object):
 			"token":"SpeedTest",
 			"action":"curConfig"
 		}
-		rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param)
+		try:
+			rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param,timeout=5)
+		except (requests.exceptions.Timeout,socket.timeout):
+			logger.error("Connect to ssr api server timeout.")
+			self.nextWinConf()
+			return False
+		except:
+			logger.exception("Get current config failed.")
+			return False
 		rep.encoding = "utf-8"
 		if (rep.status_code == 200):
 		#	logger.debug(rep.content)
 			return rep.json()
 		else:
-			logger.debug(rep.status_code)
+			logger.error(rep.status_code)
 			return False
 
 	def nextWinConf(self):
@@ -71,7 +80,14 @@ class SSR(object):
 			"token":"SpeedTest",
 			"action":"nextConfig"
 		}
-		rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param)
+		try:
+			rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param,timeout=5)
+		except (requests.exceptions.Timeout,socket.timeout):
+			logger.error("Connect to ssr api server timeout.")
+			return False
+		except:
+			logger.exception("Request next config failed.")
+			return False
 		if (rep.status_code == 403):
 			return False
 		else:
