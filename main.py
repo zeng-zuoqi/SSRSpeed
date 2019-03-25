@@ -514,6 +514,10 @@ if (__name__ == "__main__"):
 
 	export(Result,SPLIT_CNT)
 	time.sleep(1)
-	ssr.stopSsr()
+	if(checkPlatform() == "Windows"):
+		if (input("Do you want to turn off SSR-Win ? (Y/N)").lower() == "y"):
+			ssr.stopSsr()
+		else:
+			logger.info("Please manually turn off SSR-Win.")
 
 
