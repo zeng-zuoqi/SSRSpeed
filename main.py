@@ -357,17 +357,21 @@ if (__name__ == "__main__"):
 	retryList = []
 	retryConfig = []
 	retryMode = False
+	totalConfCount = 0
+	curConfCount = 0
 
 	ssr = SSR()
 
 	if (checkPlatform() == "Windows" and TEST_MODE == "ALL"):
 		configs = ssrp.getAllConfig()
+		totalConfCount = len(configs)
 		ssr.addConfig(configs)
 		ssr.startSsr()
 		setInfo(LOCAL_ADDRESS,LOCAL_PORT)
 		time.sleep(1)
 		while(True):
 			config = ssr.getCurrrentConfig()
+			curConfCount += 1
 			if (not config):
 				logger.error("Get current config failed.")
 				time.sleep(2)
@@ -375,7 +379,7 @@ if (__name__ == "__main__"):
 			_item = {}
 			_item["group"] = config["group"]
 			_item["remarks"] = config["remarks"]
-			logger.info("Starting test for %s - %s" % (config["group"],config["remarks"]))
+			logger.info("Starting test for %s - %s [%d/%d]" % (config["group"],config["remarks"],curConfCount,totalConfCount))
 			time.sleep(1)
 			try:
 				st = SpeedTest()
@@ -412,6 +416,7 @@ if (__name__ == "__main__"):
 				break
 			time.sleep(1)
 	elif(checkPlatform() == "Linux" and TEST_MODE == "ALL"):
+		totalConfCount = len(ssrp.getAllConfig())
 		config = ssrp.getNextConfig()
 		while(True):
 			setInfo(LOCAL_ADDRESS,LOCAL_PORT)
@@ -421,7 +426,8 @@ if (__name__ == "__main__"):
 			config["local_port"] = LOCAL_PORT
 			config["server_port"] = int(config["server_port"])
 			ssr.startSsr(config)
-			logger.info("Starting test for %s - %s" % (_item["group"],_item["remarks"]))
+			curConfCount += 1
+			logger.info("Starting test for %s - %s [%d/%d]" % (config["group"],config["remarks"],curConfCount,totalConfCount))
 			time.sleep(1)
 			try:
 				st = SpeedTest()
