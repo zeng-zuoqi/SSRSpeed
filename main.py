@@ -368,8 +368,8 @@ if (__name__ == "__main__"):
 		ssr.addConfig(configs)
 		ssr.startSsr()
 		setInfo(LOCAL_ADDRESS,LOCAL_PORT)
-		time.sleep(1)
 		while(True):
+			time.sleep(1)
 			config = ssr.getCurrrentConfig()
 			curConfCount += 1
 			if (not config):
@@ -488,6 +488,8 @@ if (__name__ == "__main__"):
 				ans = str(input("%d node(s) got 0kb/s,do you want to re-test these node? (Y/N)" % len(retryList))).lower()
 				if (ans == "y"):
 				#	logger.debug(retryConfig)
+					curConfCount = 0
+					totalConfCount = len(retryConfig)
 					retryMode = True
 					config = retryConfig.pop(0)
 				#	logger.debug(config)
