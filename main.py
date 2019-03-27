@@ -30,7 +30,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.1 alpha"
+VERSION = "2.2 Stable"
 LOCAL_ADDRESS = "127.0.0.1"
 LOCAL_PORT = 1087
 
