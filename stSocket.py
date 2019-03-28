@@ -184,12 +184,12 @@ def speedTestSocket(port):
 	ii = 0
 	threadCount = threading.active_count()
 	while (threadCount > 1):
-		logger.info("Waiting for thread exit,please wait,thread count : %d" % threadCount - 1)
+		logger.info("Waiting for thread exit,please wait,thread count : %d" % (threadCount - 1))
 		ii += 1
 		time.sleep(2)
 		threadCount = threading.active_count()
 		if (ii >= 3):
-			logger.warn("%d thread(s) still running,skipping." % threadCount - 1)
+			logger.warn("%d thread(s) still running,skipping." % (threadCount - 1))
 			break
 	for i in range(0,MAX_THREAD):
 		nmsl = threading.Thread(target=speedTestThread,args=(link,))
