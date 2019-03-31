@@ -30,8 +30,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-
-VERSION = "2.2 Stable"
+VERSION = "2.2.1 alpha"
 LOCAL_ADDRESS = "127.0.0.1"
 LOCAL_PORT = 1087
 
@@ -151,6 +150,13 @@ def setOpts(parser):
 		help="Set the number of nodes displayed in a single image when exporting images."
 		)
 	parser.add_option(
+		"-S","--sort",
+		action="store",
+		dest="sort_method",
+		default="",
+		help="Select sort method in [speed,rspeed,ping,rping],default not sorted."
+		)
+	parser.add_option(
 		"-i","--import",
 		action="store",
 		dest="import_file",
@@ -191,6 +197,23 @@ def export(Result,split = 0,exportOnly = False):
 	else:
 		er.exportAsPng(Result)
 
+def sortBySpeed(result):
+	return result["dspeed"]
+
+def sortByPing(result):
+	return result["ping"]
+
+def sortResult(result,sortMethod):
+	if (sortMethod != ""):
+		if (sortMethod == "SPEED"):
+			result.sort(key=sortBySpeed,reverse=True)
+		elif(sortMethod == "REVERSE_SPEED"):
+			result.sort(key=sortBySpeed)
+		elif(sortMethod == "PING"):
+			result.sort(key=sortByPing)
+		elif(sortMethod == "REVERSE_PING"):
+			result.sort(key=sortByPing,reverse=True)
+	return result
 
 def checkPlatform():
 		tmp = platform.platform()
@@ -218,6 +241,7 @@ if (__name__ == "__main__"):
 	TEST_METHOD = ""
 	TEST_MODE = ""
 	SPLIT_CNT = 0
+	SORT_METHOD = ""
 	SKIP_COMFIRMATION = False
 
 	parser = OptionParser(usage="Usage: %prog [options] arg1 arg2...",version="SSR Speed Tool " + VERSION)
@@ -312,10 +336,24 @@ if (__name__ == "__main__"):
 
 	if (int(options.split_count) > 0):
 		SPLIT_CNT = int(options.split_count)
+	
+	if (options.sort_method):
+		sm = options.sort_method
+	#	print(sm)
+		if (sm == "speed"):
+			SORT_METHOD = "SPEED"
+		elif(sm == "rspeed"):
+			SORT_METHOD = "REVERSE_SPEED"
+		elif(sm == "ping"):
+			SORT_METHOD = "PING"
+		elif(sm == "rping"):
+			SORT_METHOD = "REVERSE_PING"
+		else:
+			logger.error("Sort method %s not support." % sm)
 
 	if (options.import_file and CONFIG_LOAD_MODE == 0):
 		IMPORT_FILENAME = options.import_file
-		export(importResult.importResult(IMPORT_FILENAME),SPLIT_CNT,True)
+		export(sortResult(importResult.importResult(IMPORT_FILENAME),SORT_METHOD),SPLIT_CNT,True)
 		sys.exit(0)
 #	exit(0)
 
@@ -523,7 +561,7 @@ if (__name__ == "__main__"):
 			logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000)))
 			config = ssrp.getNextConfig()
 			if (config == None):break
-
+	Result = sortResult(Result,SORT_METHOD)
 	export(Result,SPLIT_CNT)
 	time.sleep(1)
 	if(checkPlatform() == "Windows"):
