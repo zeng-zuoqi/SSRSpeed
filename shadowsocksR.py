@@ -44,8 +44,14 @@ class SSR(object):
 		tmpConf["proxyRuleMode"] = 2
 		tmpConf["configs"] = []
 		for iitem in self.__configList:
-			iitem["protocolparam"] = iitem["protocol_param"]
-			iitem["obfsparam"] = iitem["obfs_param"]
+			try:
+				iitem["protocolparam"] = iitem["protocol_param"]
+			except KeyError:
+				iitem["protocolparam"] = ""
+			try:
+				iitem["obfsparam"] = iitem["obfs_param"]
+			except KeyError:
+				iitem["obfsparam"] = ""
 			tmpConf["configs"].append(iitem)
 		with open("./shadowsocksr-win/gui-config.json","w+",encoding="utf-8") as f:
 			f.write(json.dumps(tmpConf))
@@ -100,6 +106,7 @@ class SSR(object):
 		if (self.__process == None):
 			if (self.__checkPlatform() == "Windows"):
 				self.__ssrWinConf()
+			#	sys.exit(0)
 				self.__process = subprocess.Popen(["./shadowsocksr-win/ShadowsocksR.exe"])
 			elif(self.__checkPlatform() == "Linux"):
 				self.__config = config
@@ -137,45 +144,81 @@ class SSRParse(object):
 	def __init__(self):
 		self.__configList = []
 
+	def parseLink(self,link):
+		pass
+
 	def __parseLink(self,link):
-		decoded = b64plus.decode(link).decode("utf-8")
-		decoded1 = decoded.split("/?")[0].split(":")[::-1]
-		if (len(decoded1) != 6):
-			return None
-			addr = ""
-			for i in range(5,len(decoded1) - 1):
-				addr += decoded1[i] + ":"
-			addr += decoded1[len(decoded1) - 1]
-			decoded1[5] = addr
-		decoded2 = decoded.split("/?")[1].split("&")
-	#	print(decoded1)
-	#	print(decoded2)
 		_config = {
-			"server":decoded1[5],
-			"server_port":int(decoded1[4]),
-			"method":decoded1[2],
-			"protocol":decoded1[3],
-			"obfs":decoded1[1],
-			"password":b64plus.decode(decoded1[0]).decode("utf-8"),
+			"server":"",
+			"server_port":-1,
+			"method":"",
+			"protocol":"",
+			"obfs":"",
+			"password":"",
 			"protocol_param":"",
 			"obfsparam":"",
 			"remarks":"",
 			"group":""
 		}
-	#	logger.debug(decoded2)
-		for ii in decoded2:
-			if ("obfsparam" in ii):
-				_config["obfs_param"] = b64plus.decode(ii.split("=")[1]).decode("utf-8")
-				continue
-			elif ("protocolparam" in ii or "protoparam" in ii):
-				_config["protocol_param"] = b64plus.decode(ii.split("=")[1]).decode("utf-8")
-				continue
-			elif ("remarks" in ii):
-				_config["remarks"] = b64plus.decode(ii.split("=")[1]).decode("utf-8")
-				continue
-			elif("group" in ii):
-				_config["group"] = b64plus.decode(ii.split("=")[1]).decode("utf-8")
-				continue
+		serverType = ""
+		if (link[:6] == "ssr://"):
+			link = link[6:]
+			serverType = "SSR"
+		elif(link[:5] == "ss://"):
+			link = link[5:]
+			serverType = "SS"
+		if (serverType == ""):
+			logger.error("Unsupport link : %s" % link)
+			return None
+		
+		decoded = b64plus.decode(link).decode("utf-8")
+		if (serverType == "SSR"):
+			decoded1 = decoded.split("/?")[0].split(":")[::-1]
+			if (len(decoded1) != 6):
+				return None
+				addr = ""
+				for i in range(5,len(decoded1) - 1):
+					addr += decoded1[i] + ":"
+				addr += decoded1[len(decoded1) - 1]
+				decoded1[5] = addr
+			decoded2 = decoded.split("/?")[1].split("&")
+			_config["server"] = decoded1[5]
+			_config["server_port"] = int(decoded1[4])
+			_config["method"] = decoded1[2]
+			_config["protocol"] = decoded1[3]
+			_config["obfs"] = decoded1[1]
+			_config["password"] = b64plus.decode(decoded1[0]).decode("utf-8")
+			for ii in decoded2:
+				if ("obfsparam" in ii):
+					_config["obfs_param"] = b64plus.decode(ii.split("=")[1]).decode("utf-8")
+					continue
+				elif ("protocolparam" in ii or "protoparam" in ii):
+					_config["protocol_param"] = b64plus.decode(ii.split("=")[1]).decode("utf-8")
+					continue
+				elif ("remarks" in ii):
+					_config["remarks"] = b64plus.decode(ii.split("=")[1]).decode("utf-8")
+					continue
+				elif("group" in ii):
+					_config["group"] = b64plus.decode(ii.split("=")[1]).decode("utf-8")
+					continue
+		elif(serverType == "SS"):
+			decoded1 = decoded.split("@")[1].split(":")[::-1]
+			decoded2 = decoded.split("@")[0].split(":")
+			if (len(decoded1) != 2):
+				return None
+				addr = ""
+				for i in range(1,len(decoded1) - 1):
+					addr += decoded1[i] + ":"
+				addr += decoded1[len(decoded1) - 1]
+				decoded1[1] = addr
+			_config["server"] = decoded1[1]
+			_config["port"] = int(decoded1[0])
+			_config["method"] = decoded2[0]
+			_config["password"] = decoded2[1]
+			_config["group"] = "Shadowsocks"
+			_config["remarks"] = _config["server"]
+		#print(decoded)
+		#print(decoded2)
 		_config["local_port"] = LOCAL_PORT
 		_config["local_address"] = LOCAL_ADDRESS
 		_config["timeout"] = TIMEOUT
@@ -272,8 +315,6 @@ class SSRParse(object):
 		linksArr = (b64plus.decode(rep).decode("utf-8")).split("\n")
 		for link in linksArr:
 			link = link.strip()
-			if (link[:6] != "ssr://"):continue
-			link = link[6:]
 			cfg = self.__parseLink(link)
 			if (cfg):
 				self.__configList.append(cfg)
@@ -288,10 +329,10 @@ class SSRParse(object):
 					"server_port":int(item["server_port"]),
 					"password":item["password"],
 					"method":item["method"],
-					"protocol":item["protocol"],
-					"protocol_param":item["protocolparam"],
-					"obfs":item["obfs"],
-					"obfs_param":item["obfsparam"],
+					"protocol":item.get("protocol",""),
+					"protocol_param":item.get("protocolparam",""),
+					"obfs":item.get("obfs",""),
+					"obfs_param":item.get("obfsparam",""),
 					"remarks":item["remarks"],
 					"group":item["group"],
 					"local_address":LOCAL_ADDRESS,
@@ -313,6 +354,9 @@ class SSRParse(object):
 		else:
 			return None
 
+if (__name__ == "__main__"):
+	ssrp = SSRParse()
+	ssrp.parseLink("ss://YWVzLTEyOC1jZmI6WW91cnBhc3N3b3JkQFNlcnZlci5JUC5BZGRyZXNzOjQ0Mw==")
 
 
 
