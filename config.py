@@ -7,7 +7,13 @@ config = {
 		"过期时间"
 	],
 	"exportResult":{
-		"hideMaxSpeed":True
+		"hideMaxSpeed":True,
+		"uploadResult":False
+	},
+	"uploadResult":{
+		"apiToken":"Test",
+		"server":"",
+		"remark":"Example Remark."
 	},
 	"speedtestsocket":{
 		"maxThread":8,	#Thread count
