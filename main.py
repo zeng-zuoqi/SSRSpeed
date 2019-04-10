@@ -9,7 +9,7 @@ import platform
 from optparse import OptionParser
 import logging
 
-from shadowsocksR import SSRParse,SSR
+from shadowsocksR import SSRParse,SSR,SS
 from speedTest import SpeedTest,setInfo
 from exportResult import ExportResult
 import importResult
@@ -30,7 +30,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.2.1 alpha"
+VERSION = "2.2.2 alpha"
 LOCAL_ADDRESS = "127.0.0.1"
 LOCAL_PORT = 1087
 
@@ -134,6 +134,13 @@ def setOpts(parser):
 		dest="erfilter",
 		default = [],
 		help="Exclude nodes by remarks using keyword."
+		)
+	parser.add_option(
+		"-t","--type",
+		action="store",
+		dest="proxy_type",
+		default = "ssr",
+		help="Select proxy type in [ssr,ss],default ssr."
 		)
 	parser.add_option(
 		"-y","--yes",
@@ -240,6 +247,7 @@ if (__name__ == "__main__"):
 	EXCLUDE_REMARK_KEWORD = []
 	TEST_METHOD = ""
 	TEST_MODE = ""
+	PROXY_TYPE = "SSR"
 	SPLIT_CNT = 0
 	SORT_METHOD = ""
 	SKIP_COMFIRMATION = False
@@ -260,6 +268,7 @@ if (__name__ == "__main__"):
 					os.remove(os.path.join(root, name))
 				except:
 					pass
+		sys.exit(0)
 
 	if (options.debug):
 		DEBUG = options.debug
@@ -275,6 +284,14 @@ if (__name__ == "__main__"):
 
 	if (logger.level == logging.DEBUG):
 		logger.debug("Program running in debug mode")
+
+	if (options.proxy_type):
+		if (options.proxy_type.lower() == "ss"):
+			PROXY_TYPE = "SS"
+		elif (options.proxy_type.lower() == "ssr"):
+			PROXY_TYPE = "SSR"
+		else:
+			logger.warn("Unknown proxy type {} ,using default ssr.".format(options.proxy_type))
 
 	#print(options.test_method)
 	if (options.test_method == "speedtestnet"):
@@ -399,17 +416,20 @@ if (__name__ == "__main__"):
 	totalConfCount = 0
 	curConfCount = 0
 
-	ssr = SSR()
+	if (PROXY_TYPE == "SSR"):
+		client = SSR()
+	elif(PROXY_TYPE == "SS"):
+		client = SS()
 
 	if (checkPlatform() == "Windows" and TEST_MODE == "ALL"):
 		configs = ssrp.getAllConfig()
 		totalConfCount = len(configs)
-		ssr.addConfig(configs)
-		ssr.startSsr()
+		client.addConfig(configs)
+		client.startClient()
 		setInfo(LOCAL_ADDRESS,LOCAL_PORT)
 		while(True):
 			time.sleep(1)
-			config = ssr.getCurrrentConfig()
+			config = client.getCurrrentConfig()
 			curConfCount += 1
 			if (not config):
 				logger.error("Get current config failed.")
@@ -450,8 +470,8 @@ if (__name__ == "__main__"):
 				Result.append(_item)
 			except:
 				logger.exception("")
-				ssr.stopSsr()
-			if (not ssr.nextWinConf()):
+				client.stopClient()
+			if (not client.nextWinConf()):
 				break
 			time.sleep(1)
 	elif(checkPlatform() == "Linux" and TEST_MODE == "ALL"):
@@ -464,7 +484,7 @@ if (__name__ == "__main__"):
 			_item["remarks"] = config["remarks"]
 			config["local_port"] = LOCAL_PORT
 			config["server_port"] = int(config["server_port"])
-			ssr.startSsr(config)
+			client.startClient(config)
 			curConfCount += 1
 			logger.info("Starting test for %s - %s [%d/%d]" % (config["group"],config["remarks"],curConfCount,totalConfCount))
 			time.sleep(1)
@@ -480,7 +500,7 @@ if (__name__ == "__main__"):
 				else:
 					_item["dspeed"] = 0
 					_item["maxDSpeed"] = 0
-				ssr.stopSsr()
+				client.stopClient()
 				time.sleep(1)
 			#	.print (latencyTest)
 				_item["loss"] = 1 - latencyTest[1]
@@ -506,13 +526,13 @@ if (__name__ == "__main__"):
 				#socks2httpServer.shutdown()
 				#logger.debug("Socks2HTTP Server already shutdown.")
 			except Exception:
-				ssr.stopSsr()
+				client.stopClient()
 				#socks2httpServer.shutdown()
 				#logger.debug("Socks2HTTP Server already shutdown.")
 				#traceback.print_exc()
 				logger.exception("")
 				sys.exit(1)
-			ssr.stopSsr()
+			client.stopClient()
 			if (retryMode):
 				if (retryConfig != []):
 					config = retryConfig.pop(0)
@@ -566,7 +586,7 @@ if (__name__ == "__main__"):
 	time.sleep(1)
 	if(checkPlatform() == "Windows"):
 		if (input("Do you want to turn off SSR-Win ? (Y/N)").lower() == "y"):
-			ssr.stopSsr()
+			client.stopClient()
 		else:
 			logger.info("Please manually turn off SSR-Win.")
 

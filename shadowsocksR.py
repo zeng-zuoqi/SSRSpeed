@@ -8,6 +8,7 @@ import signal
 import socket
 import os
 import sys
+import urllib.parse
 import logging
 logger = logging.getLogger("Sub")
 
@@ -17,14 +18,13 @@ LOCAL_ADDRESS = "127.0.0.1"
 LOCAL_PORT = 1087
 TIMEOUT = 10
 
-class SSR(object):
+class Shadowsocks(object):
 	def __init__(self):
-		self.__configList = []
-		self.__config = {}
-		self.__process = None
-		self.__ssrAuth = ""
-
-	def __checkPlatform(self):
+		self._configList = []
+		self._config = {}
+		self._process = None
+	
+	def _checkPlatform(self):
 		tmp = platform.platform()
 		if ("Windows" in tmp):
 			return "Windows"
@@ -33,7 +33,99 @@ class SSR(object):
 		else:
 			return "Unknown"
 
-	def __ssrWinConf(self):
+	def addConfig(self,configList):
+		self._configList = configList
+
+	def startClient(self,config={}):
+		pass
+
+	def getCurrrentConfig(self):
+		pass
+	
+	def nextWinConf(self):
+		pass
+
+	def stopClient(self):
+		if(self._process != None):
+			if (self._checkPlatform() == "Windows"):
+				self._process.terminate()
+			else:
+				self._process.send_signal(signal.SIGQUIT)
+				self._process.send_signal(signal.SIGINT)
+	#		print (self.__process.returncode)
+			self._process = None
+			logger.info("Shadowsocks(R) terminated.")
+	#	self.__ssrProcess.terminate()
+
+class SS(Shadowsocks):
+	def __init__(self):
+		super(SS,self).__init__()
+
+	def getCurrrentConfig(self):
+		with open("./shadowsocks-win/gui-config.json","r",encoding="utf-8") as f:
+			tmpConf = json.loads(f.read())
+			f.close()
+		curIndex = tmpConf["index"]
+		return tmpConf["configs"][curIndex]
+
+	def nextWinConf(self):
+		self.stopClient()
+		with open("./shadowsocks-win/gui-config.json","r",encoding="utf-8") as f:
+			tmpConf = json.loads(f.read())
+			f.close()
+		curIndex = tmpConf["index"] + 1
+		maxIndex = len(tmpConf["configs"])
+		if (curIndex >= maxIndex):
+			return None
+		tmpConf["index"] = curIndex
+		with open("./shadowsocks-win/gui-config.json","w+",encoding="utf-8") as f:
+			f.write(json.dumps(tmpConf))
+			f.close()
+		self.startClient()
+		return tmpConf["configs"][curIndex]
+
+	def __winConf(self):
+		with open("./shadowsocks-win/gui-config.json","r",encoding="utf-8") as f:
+			tmpConf = json.loads(f.read())
+			f.close()
+		tmpConf["localPort"] = LOCAL_PORT
+		tmpConf["index"] = 0
+		tmpConf["global"] = True
+		tmpConf["enabled"] = True
+		tmpConf["configs"] = []
+		for iitem in self._configList:
+			tmpConf["configs"].append(iitem)
+		with open("./shadowsocks-win/gui-config.json","w+",encoding="utf-8") as f:
+			f.write(json.dumps(tmpConf))
+			f.close()
+
+	def startClient(self,config={}):
+		if (self._process == None):
+			if (self._checkPlatform() == "Windows"):
+				self.__winConf()
+			#	sys.exit(0)
+				self._process = subprocess.Popen(["./shadowsocks-win/Shadowsocks.exe"])
+			elif(self._checkPlatform() == "Linux"):
+				self._config = config
+				self._config["server_port"] = int(self._config["server_port"])
+				with open("./config.json","w+",encoding="utf-8") as f:
+					f.write(json.dumps(self._config))
+					f.close()
+				if (logger.level == logging.DEBUG):
+					self._process = subprocess.Popen(["python3","./shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()])
+				else:
+					self._process = subprocess.Popen(["python3","./shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+				logger.info("Starting ShadowsocksR-Python with server %s:%d" % (config["server"],config["server_port"]))
+			else:
+				logger.error("Your system does not supported.Please contact developer.")
+				sys.exit(1)
+	
+class SSR(Shadowsocks):
+	def __init__(self):
+		super(SSR,self).__init__()
+		self.__ssrAuth = ""
+
+	def __winConf(self):
 		with open("./shadowsocksr-win/gui-config.json","r",encoding="utf-8") as f:
 			tmpConf = json.loads(f.read())
 			f.close()
@@ -43,7 +135,7 @@ class SSR(object):
 		tmpConf["index"] = 0
 		tmpConf["proxyRuleMode"] = 2
 		tmpConf["configs"] = []
-		for iitem in self.__configList:
+		for iitem in self._configList:
 			try:
 				iitem["protocolparam"] = iitem["protocol_param"]
 			except KeyError:
@@ -99,46 +191,27 @@ class SSR(object):
 		else:
 			return True
 
-	def addConfig(self,configList):
-		self.__configList = configList
-
-	def startSsr(self,config = {}):
-		if (self.__process == None):
-			if (self.__checkPlatform() == "Windows"):
-				self.__ssrWinConf()
+	def startClient(self,config = {}):
+		if (self._process == None):
+			if (self._checkPlatform() == "Windows"):
+				self.__winConf()
 			#	sys.exit(0)
-				self.__process = subprocess.Popen(["./shadowsocksr-win/ShadowsocksR.exe"])
-			elif(self.__checkPlatform() == "Linux"):
-				self.__config = config
-				self.__config["server_port"] = int(self.__config["server_port"])
+				self._process = subprocess.Popen(["./shadowsocksr-win/ShadowsocksR.exe"])
+			elif(self._checkPlatform() == "Linux"):
+				self._config = config
+				self._config["server_port"] = int(self._config["server_port"])
 				with open("./config.json","w+",encoding="utf-8") as f:
-					f.write(json.dumps(self.__config))
+					f.write(json.dumps(self._config))
 					f.close()
 				if (logger.level == logging.DEBUG):
-					self.__process = subprocess.Popen(["python3","./shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()])
+					self._process = subprocess.Popen(["python3","./shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()])
 				else:
-					self.__process = subprocess.Popen(["python3","./shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+					self._process = subprocess.Popen(["python3","./shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 				logger.info("Starting ShadowsocksR-Python with server %s:%d" % (config["server"],config["server_port"]))
 			else:
 				logger.error("Your system does not supported.Please contact developer.")
 				sys.exit(1)
-			
-
 		#	print(self.__process.returncode)
-
-
-	def stopSsr(self):
-		if(self.__process != None):
-			if (self.__checkPlatform() == "Windows"):
-				self.__process.terminate()
-			else:
-				self.__process.send_signal(signal.SIGQUIT)
-				self.__process.send_signal(signal.SIGINT)
-	#		print (self.__process.returncode)
-			self.__process = None
-			logger.info("ShadowsocksR terminated.")
-	#	self.__ssrProcess.terminate()
-
 
 class SSRParse(object):
 	def __init__(self):
@@ -154,25 +227,29 @@ class SSRParse(object):
 			"method":"",
 			"protocol":"",
 			"obfs":"",
+			"plugin":"",
 			"password":"",
 			"protocol_param":"",
 			"obfsparam":"",
+			"plugin_opts":"",
+			"plugin_args":"",
 			"remarks":"",
+			"timeout":5,
 			"group":""
 		}
 		serverType = ""
 		if (link[:6] == "ssr://"):
-			link = link[6:]
 			serverType = "SSR"
 		elif(link[:5] == "ss://"):
-			link = link[5:]
+		#	link = link[5:]
 			serverType = "SS"
 		if (serverType == ""):
 			logger.error("Unsupport link : %s" % link)
 			return None
-		
-		decoded = b64plus.decode(link).decode("utf-8")
+			
 		if (serverType == "SSR"):
+			link = link[6:]
+			decoded = b64plus.decode(link).decode("utf-8")
 			decoded1 = decoded.split("/?")[0].split(":")[::-1]
 			if (len(decoded1) != 6):
 				return None
@@ -202,21 +279,60 @@ class SSRParse(object):
 					_config["group"] = b64plus.decode(ii.split("=")[1]).decode("utf-8")
 					continue
 		elif(serverType == "SS"):
-			decoded1 = decoded.split("@")[1].split(":")[::-1]
-			decoded2 = decoded.split("@")[0].split(":")
-			if (len(decoded1) != 2):
+			urlData = urllib.parse.unquote(link)
+			urlResult = urllib.parse.urlparse(urlData)
+			decoded = b64plus.decode(urlResult.netloc[:urlResult.netloc.find("@")]).decode("utf-8")
+			method = decoded.split(":")[0]
+			password = decoded.split(":")[1]
+			addrPort = urlResult.netloc[urlResult.netloc.find("@") + 1:].split(":")
+			remarks = urlResult.fragment
+			if (len(addrPort) != 2):
 				return None
-				addr = ""
-				for i in range(1,len(decoded1) - 1):
-					addr += decoded1[i] + ":"
-				addr += decoded1[len(decoded1) - 1]
-				decoded1[1] = addr
-			_config["server"] = decoded1[1]
-			_config["port"] = int(decoded1[0])
-			_config["method"] = decoded2[0]
-			_config["password"] = decoded2[1]
-			_config["group"] = "Shadowsocks"
-			_config["remarks"] = _config["server"]
+			serverAddr = addrPort[0]
+			serverPort = int(addrPort[1])
+
+			queryResult = urlResult.query
+		#	qsResult = urllib.parse.parse_qs(urlResult.query)
+		#	plugin = qsResult.get("plugin")
+			plugin = ""
+			pluginOpts = ""
+			group = ""
+
+			if ("group=" in queryResult):
+				index1 = queryResult.find("group=") + 6
+				index2 = queryResult.find("&",index1)
+				group = b64plus.decode(queryResult[index1:index2 if index2 != -1 else None]).decode("utf-8")
+			if ("plugin=" in queryResult):
+				index1 = queryResult.find("plugin=") + 7
+				index2 = queryResult.find(";",index1)
+				plugin = queryResult[index1:index2]
+				index3 = queryResult.find("&",index2)
+				pluginOpts = queryResult[index2 + 1:index3 if index3 != -1 else None]
+
+			_config["server"] = serverAddr
+			_config["server_port"] = serverPort
+			_config["method"] = method
+			_config["password"] = password
+			_config["group"] = group
+			_config["remarks"] = remarks
+			_config["plugin"] = plugin
+			_config["plugin_opts"] = pluginOpts
+
+		#	decoded1 = decoded.split("@")[1].split(":")[::-1]
+		#	decoded2 = decoded.split("@")[0].split(":")
+		#	if (len(decoded1) != 2):
+		#		return None
+		#		addr = ""
+		#		for i in range(1,len(decoded1) - 1):
+		#			addr += decoded1[i] + ":"
+		#		addr += decoded1[len(decoded1) - 1]
+		#		decoded1[1] = addr
+		#	_config["server"] = decoded1[1]
+		#	_config["port"] = int(decoded1[0])
+		#	_config["method"] = decoded2[0]
+		#	_config["password"] = decoded2[1]
+		#	_config["group"] = "Shadowsocks"
+		#	_config["remarks"] = _config["server"]
 		#print(decoded)
 		#print(decoded2)
 		_config["local_port"] = LOCAL_PORT
@@ -247,6 +363,7 @@ class SSRParse(object):
 		for rkw in rkwl:
 			for item in self.__configList:
 				if (self.__checkInList(item,_list)):continue
+			#	print(item["remarks"])
 				if (rkw in item["remarks"]):
 					_list.append(item)
 		self.__configList = _list
@@ -302,7 +419,7 @@ class SSRParse(object):
 
 	def printNode(self):
 		for item in self.__configList:
-			#print("%s - %s" % (item["group"],item["remarks"]))
+		#	print("%s - %s" % (item["group"],item["remarks"]))
 			logger.info("%s - %s" % (item["group"],item["remarks"]))
 
 	def readSubscriptionConfig(self,url):
@@ -314,6 +431,7 @@ class SSRParse(object):
 		rep = rep.content.decode("utf-8")
 		linksArr = (b64plus.decode(rep).decode("utf-8")).split("\n")
 		for link in linksArr:
+		#	print(link)
 			link = link.strip()
 			cfg = self.__parseLink(link)
 			if (cfg):
@@ -331,8 +449,11 @@ class SSRParse(object):
 					"method":item["method"],
 					"protocol":item.get("protocol",""),
 					"protocol_param":item.get("protocolparam",""),
+					"plugin":item.get("plugin",""),
 					"obfs":item.get("obfs",""),
 					"obfs_param":item.get("obfsparam",""),
+					"plugin_opts":item.get("plugin_opts",""),
+					"plugin_args":item.get("plugin_args",""),
 					"remarks":item["remarks"],
 					"group":item["group"],
 					"local_address":LOCAL_ADDRESS,
@@ -356,7 +477,8 @@ class SSRParse(object):
 
 if (__name__ == "__main__"):
 	ssrp = SSRParse()
-	ssrp.parseLink("ss://YWVzLTEyOC1jZmI6WW91cnBhc3N3b3JkQFNlcnZlci5JUC5BZGRyZXNzOjQ0Mw==")
+	
+	#print(ssrp.parseLink("ss://Y2hhY2hhMjAtaWV0Zi1wb2x5MTMwNToxMjM0NTY@127.0.0.1:152/?plugin=obfs-local%3bobfs%3dtls%3bobfs-host%3d921aa27135.wns.windows.com&group=DlerCloud#Test"))
 
 
 

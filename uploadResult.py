@@ -40,6 +40,6 @@ def pushToServer(filename):
 		return result
 
 if (__name__ == "__main__"):
-	pushToServer("test.png")
+	print(pushToServer("test.png"))
 
 

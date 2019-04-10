@@ -11,7 +11,7 @@ config = {
 		"uploadResult":False
 	},
 	"uploadResult":{
-		"apiToken":"Test",
+		"apiToken":"",
 		"server":"",
 		"remark":"Example Remark."
 	},
