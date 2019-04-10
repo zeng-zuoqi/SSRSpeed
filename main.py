@@ -436,9 +436,10 @@ if (__name__ == "__main__"):
 				time.sleep(2)
 				continue
 			_item = {}
-			_item["group"] = config["group"]
-			_item["remarks"] = config["remarks"]
-			logger.info("Starting test for %s - %s [%d/%d]" % (config["group"],config["remarks"],curConfCount,totalConfCount))
+			logger.debug(config)
+			_item["group"] = config.get("group","Group NULL")
+			_item["remarks"] = config.get("remarks","Remark NULL")
+			logger.info("Starting test for %s - %s [%d/%d]" % (_item["group"],_item["remarks"],curConfCount,totalConfCount))
 			time.sleep(1)
 			try:
 				st = SpeedTest()

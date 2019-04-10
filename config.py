@@ -34,7 +34,7 @@ config = {
 	#			"mode":"match_location",
 	#			"countries":[	#Country Code,for example: HK, US, JP etc.
 	#			],
-	#			"continent":"Europe",
+	#			"continent":"EU",
 	#			"tag":"Hetzner_DE"
 	#		},
 	#		{

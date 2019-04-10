@@ -7,6 +7,7 @@ import platform
 import signal
 import socket
 import os
+import time
 import sys
 import urllib.parse
 import logging
@@ -73,16 +74,26 @@ class SS(Shadowsocks):
 		with open("./shadowsocks-win/gui-config.json","r",encoding="utf-8") as f:
 			tmpConf = json.loads(f.read())
 			f.close()
-		curIndex = tmpConf["index"] + 1
-		maxIndex = len(tmpConf["configs"])
-		if (curIndex >= maxIndex):
+		tmpConf["configs"] = []
+		try:
+			curConfig = self._configList.pop(0)
+		except IndexError:
 			return None
-		tmpConf["index"] = curIndex
+		tmpConf["configs"].append(curConfig)
+	#	curIndex = tmpConf["index"] + 1
+	#	maxIndex = len(tmpConf["configs"])
+	#	if (curIndex >= maxIndex):
+	#		return None
+	#	tmpConf["index"] = curIndex
 		with open("./shadowsocks-win/gui-config.json","w+",encoding="utf-8") as f:
 			f.write(json.dumps(tmpConf))
 			f.close()
-		self.startClient()
-		return tmpConf["configs"][curIndex]
+		logger.info("Wait {} secs to start client.".format(3))
+		for i in range(0,6):
+			time.sleep(0.5)
+		self.startClient({},True)
+		return curConfig
+	#	return tmpConf["configs"][curIndex]
 
 	def __winConf(self):
 		with open("./shadowsocks-win/gui-config.json","r",encoding="utf-8") as f:
@@ -90,8 +101,8 @@ class SS(Shadowsocks):
 			f.close()
 		tmpConf["localPort"] = LOCAL_PORT
 		tmpConf["index"] = 0
-		tmpConf["global"] = True
-		tmpConf["enabled"] = True
+		tmpConf["global"] = False
+		tmpConf["enabled"] = False
 		tmpConf["configs"] = []
 		for iitem in self._configList:
 			tmpConf["configs"].append(iitem)
@@ -99,10 +110,11 @@ class SS(Shadowsocks):
 			f.write(json.dumps(tmpConf))
 			f.close()
 
-	def startClient(self,config={}):
+	def startClient(self,config={},testing=False):
 		if (self._process == None):
 			if (self._checkPlatform() == "Windows"):
-				self.__winConf()
+				if (not testing):
+					self.__winConf()
 			#	sys.exit(0)
 				self._process = subprocess.Popen(["./shadowsocks-win/Shadowsocks.exe"])
 			elif(self._checkPlatform() == "Linux"):

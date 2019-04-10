@@ -46,8 +46,8 @@ def parseLocation():
 			"https":"socks5h://127.0.0.1:%d" % LOCAL_PORT
 		},timeout=5)
 		tmp = rep.json()
-		logger.info("Server Country Code : %s,Timezone : %s" % (tmp["country_code"],tmp["timezone"]))
-		return (True,tmp["country_code"],tmp["timezone"],tmp["organization"])
+		logger.info("Server Country Code : %s,Continent Code : %s" % (tmp["country_code"],tmp["continent_code"]))
+		return (True,tmp["country_code"],tmp["continent_code"],tmp["organization"])
 	except:
 		logger.exception("Parse location failed.")
 		try:
@@ -148,7 +148,7 @@ def checkRule():
 						logger.info("Country code %s matched." % res[1])
 						return getDownloadLink(rule["tag"])
 				if (rule.get("continent","") != "" and rule["continent"].strip() in res[2].strip()):
-					logger.info("Timezone %s matched." % res[2])
+					logger.info("Continent %s matched." % res[2])
 					return getDownloadLink(rule["tag"])
 		logger.info("No rule matched.using default.")
 		return getDownloadLink()
