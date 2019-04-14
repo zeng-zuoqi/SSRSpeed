@@ -124,9 +124,9 @@ class SS(Shadowsocks):
 					f.write(json.dumps(self._config))
 					f.close()
 				if (logger.level == logging.DEBUG):
-					self._process = subprocess.Popen(["python3","./shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()])
+					self._process = subprocess.Popen(["ss-local","-c","%s/config.json" % os.getcwd()])
 				else:
-					self._process = subprocess.Popen(["python3","./shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+					self._process = subprocess.Popen(["ss-local","-c","%s/config.json" % os.getcwd()],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 				logger.info("Starting ShadowsocksR-Python with server %s:%d" % (config["server"],config["server_port"]))
 			else:
 				logger.error("Your system does not supported.Please contact developer.")
@@ -167,15 +167,22 @@ class SSR(Shadowsocks):
 			"token":"SpeedTest",
 			"action":"curConfig"
 		}
-		try:
-			rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param,timeout=5)
-		except (requests.exceptions.Timeout,socket.timeout):
-			logger.error("Connect to ssr api server timeout.")
-			self.nextWinConf()
-			return False
-		except:
-			logger.exception("Get current config failed.")
-			return False
+		i = 0
+		while (True):
+			try:
+				rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param,timeout=5)
+				break
+			except (requests.exceptions.Timeout,socket.timeout):
+				logger.error("Connect to ssr api server timeout.")
+				i += 1
+				if (i >= 4):
+					return False
+				continue
+			#	self.nextWinConf()
+			#	return False
+			except:
+				logger.exception("Get current config failed.")
+				return False
 		rep.encoding = "utf-8"
 		if (rep.status_code == 200):
 		#	logger.debug(rep.content)
@@ -190,14 +197,21 @@ class SSR(Shadowsocks):
 			"token":"SpeedTest",
 			"action":"nextConfig"
 		}
-		try:
-			rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param,timeout=5)
-		except (requests.exceptions.Timeout,socket.timeout):
-			logger.error("Connect to ssr api server timeout.")
-			return False
-		except:
-			logger.exception("Request next config failed.")
-			return False
+		i = 0
+		while(True):
+			try:
+				rep = requests.post("http://%s:%d/api?auth=%s" % (LOCAL_ADDRESS,LOCAL_PORT,self.__ssrAuth),params = param,timeout=5)
+				break
+			except (requests.exceptions.Timeout,socket.timeout):
+				logger.error("Connect to ssr api server timeout.")
+				i += 1
+				if (i >= 4):
+					return False
+				continue
+			#	return False
+			except:
+				logger.exception("Request next config failed.")
+				return False
 		if (rep.status_code == 403):
 			return False
 		else:
@@ -247,7 +261,7 @@ class SSRParse(object):
 			"plugin_args":"",
 			"remarks":"",
 			"timeout":5,
-			"group":""
+			"group":"N/A"
 		}
 		serverType = ""
 		if (link[:6] == "ssr://"):
@@ -308,7 +322,7 @@ class SSRParse(object):
 		#	plugin = qsResult.get("plugin")
 			plugin = ""
 			pluginOpts = ""
-			group = ""
+			group = "N/A"
 
 			if ("group=" in queryResult):
 				index1 = queryResult.find("group=") + 6
@@ -347,6 +361,8 @@ class SSRParse(object):
 		#	_config["remarks"] = _config["server"]
 		#print(decoded)
 		#print(decoded2)
+		if (_config["remarks"] == ""):
+			_config["remarks"] = _config["server"]
 		_config["local_port"] = LOCAL_PORT
 		_config["local_address"] = LOCAL_ADDRESS
 		_config["timeout"] = TIMEOUT
@@ -466,13 +482,16 @@ class SSRParse(object):
 					"obfs_param":item.get("obfsparam",""),
 					"plugin_opts":item.get("plugin_opts",""),
 					"plugin_args":item.get("plugin_args",""),
-					"remarks":item["remarks"],
-					"group":item["group"],
+					"remarks":item.get("remarks",item["server"]),
+					"group":item.get("group","N/A"),
 					"local_address":LOCAL_ADDRESS,
 					"local_port":LOCAL_PORT,
 					"timeout":TIMEOUT,
 					"fast_open": False
 				}
+				if (_dict["remarks"] == ""):
+					_dict["remarks"] = _dict["server"]
+			#	logger.info(_dict["server"])
 				self.__configList.append(_dict)
 			f.close()
 

@@ -30,7 +30,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.2.2 alpha"
+VERSION = "2.2.2 beta"
 LOCAL_ADDRESS = "127.0.0.1"
 LOCAL_PORT = 1087
 
@@ -452,6 +452,11 @@ if (__name__ == "__main__"):
 						testRes = st.startTest(TEST_METHOD)
 					_item["dspeed"] = testRes[0]
 					_item["maxDSpeed"] = testRes[1]
+					_item["rawSocketSpeed"] = []
+					try:
+						_item["rawSocketSpeed"] = testRes[2]
+					except:
+						pass
 					time.sleep(1)
 				else:
 					_item["dspeed"] = 0

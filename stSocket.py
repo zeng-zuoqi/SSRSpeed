@@ -58,6 +58,7 @@ def parseLocation():
 
 def speedTestThread(link):
 	global TOTAL_RECEIVED,MAX_TIME
+	logger.debug("Thread {} started.".format(threading.current_thread().ident))
 	link = link.replace("https://","").replace("http://","")
 	host = link[:link.find("/")]
 	requestUri = link[link.find("/"):]
@@ -101,6 +102,7 @@ def speedTestThread(link):
 		if (deltaTime >= 12):
 			deltaTime = 11
 		s.close()
+		logger.debug("Thread {} done,time : {}".format(threading.current_thread().ident,deltaTime))
 		LOCK.acquire()
 	#	TOTAL_RECEIVED += received
 		MAX_TIME = max(MAX_TIME,deltaTime)
@@ -225,6 +227,7 @@ def speedTestSocket(port):
 		logger.error("Socket Test Error !")
 		return(0,0)
 	restoreSocket()
+	rawSpeedList = maxSpeedList
 	maxSpeedList.sort()
 #	print (maxSpeedList)
 	if (len(maxSpeedList) > 12):
@@ -235,7 +238,7 @@ def speedTestSocket(port):
 	else:
 		maxSpeed = currentSpeed
 #	print(maxSpeed / 1024 / 1024)
-	return (TOTAL_RECEIVED / MAX_TIME,maxSpeed)
+	return (TOTAL_RECEIVED / MAX_TIME,maxSpeed,rawSpeedList)
 
 if (__name__ == "__main__"):
 	res = speedTestSocket(1080)
