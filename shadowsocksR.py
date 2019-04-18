@@ -31,6 +31,8 @@ class Shadowsocks(object):
 			return "Windows"
 		elif("Linux" in tmp):
 			return "Linux"
+		elif("Darwin" in tmp):
+			return "MacOS"
 		else:
 			return "Unknown"
 
@@ -117,7 +119,7 @@ class SS(Shadowsocks):
 					self.__winConf()
 			#	sys.exit(0)
 				self._process = subprocess.Popen(["./shadowsocks-win/Shadowsocks.exe"])
-			elif(self._checkPlatform() == "Linux"):
+			elif(self._checkPlatform() == "Linux" or self._checkPlatform() == "MacOS"):
 				self._config = config
 				self._config["server_port"] = int(self._config["server_port"])
 				with open("./config.json","w+",encoding="utf-8") as f:
@@ -129,7 +131,7 @@ class SS(Shadowsocks):
 					self._process = subprocess.Popen(["ss-local","-c","%s/config.json" % os.getcwd()],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 				logger.info("Starting ShadowsocksR-Python with server %s:%d" % (config["server"],config["server_port"]))
 			else:
-				logger.error("Your system does not supported.Please contact developer.")
+				logger.critical("Your system does not supported.Please contact developer.")
 				sys.exit(1)
 	
 class SSR(Shadowsocks):
@@ -223,7 +225,7 @@ class SSR(Shadowsocks):
 				self.__winConf()
 			#	sys.exit(0)
 				self._process = subprocess.Popen(["./shadowsocksr-win/ShadowsocksR.exe"])
-			elif(self._checkPlatform() == "Linux"):
+			elif(self._checkPlatform() == "Linux" or self._checkPlatform() == "MacOS"):
 				self._config = config
 				self._config["server_port"] = int(self._config["server_port"])
 				with open("./config.json","w+",encoding="utf-8") as f:

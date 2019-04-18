@@ -30,7 +30,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.2.2 beta"
+VERSION = "2.2.3 alpha"
 LOCAL_ADDRESS = "127.0.0.1"
 LOCAL_PORT = 1087
 
@@ -224,10 +224,13 @@ def sortResult(result,sortMethod):
 
 def checkPlatform():
 		tmp = platform.platform()
+		logger.info("Platform Info : {}".format(str(tmp)))
 		if ("Windows" in tmp):
 			return "Windows"
 		elif("Linux" in tmp):
 			return "Linux"
+		elif("Darwin" in tmp):
+			return "MacOS"
 		else:
 			return "Unknown"
 
@@ -421,7 +424,9 @@ if (__name__ == "__main__"):
 	elif(PROXY_TYPE == "SS"):
 		client = SS()
 
-	if (checkPlatform() == "Windows" and TEST_MODE == "ALL"):
+	pfInfo = checkPlatform()
+
+	if (pfInfo == "Windows" and TEST_MODE == "ALL"):
 		configs = ssrp.getAllConfig()
 		totalConfCount = len(configs)
 		client.addConfig(configs)
@@ -480,7 +485,7 @@ if (__name__ == "__main__"):
 			if (not client.nextWinConf()):
 				break
 			time.sleep(1)
-	elif(checkPlatform() == "Linux" and TEST_MODE == "ALL"):
+	elif((pfInfo == "MacOS" or pfInfo == "Linux") and TEST_MODE == "ALL"):
 		totalConfCount = len(ssrp.getAllConfig())
 		config = ssrp.getNextConfig()
 		while(True):
@@ -569,6 +574,9 @@ if (__name__ == "__main__"):
 								Result[s]["loss"] = r["loss"]
 								break
 					break
+	else:
+		logger.critical("Your system does not supported.Please contact developer.")
+		sys.exit(1)
 	
 	if (TEST_MODE == "TCP_PING"):
 		config = ssrp.getNextConfig()

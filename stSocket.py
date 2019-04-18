@@ -238,6 +238,7 @@ def speedTestSocket(port):
 	else:
 		maxSpeed = currentSpeed
 #	print(maxSpeed / 1024 / 1024)
+	logger.info("Fetched {:.2f} KB in {:.2f} s.".format(TOTAL_RECEIVED / 1000,MAX_TIME))
 	return (TOTAL_RECEIVED / MAX_TIME,maxSpeed,rawSpeedList)
 
 if (__name__ == "__main__"):
