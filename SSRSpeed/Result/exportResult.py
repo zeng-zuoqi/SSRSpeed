@@ -176,14 +176,43 @@ class ExportResult(object):
 	def __getColor(self,data):
 		if (data > 16 * 1024 * 1024):
 			return (255,0,0)
-		elif (data < 64 * 1024):
+		elif (data < 64 * 1024):#0 - 64 KB
 			return self.__mixColor((255,255,255),(128,255,0),data/64/1024)
-		elif (data < 512 * 1024):
+		elif (data < 512 * 1024):#64 - 512 KB
 			return self.__mixColor((128,255,0),(255,255,0),(data-64*1024)/(512*1024-64*1024))
-		elif (data < 4*1024*1024):
+		elif (data < 4*1024*1024):#512KB - 4MB
 			return self.__mixColor((255,255,0),(255,128,192),(data-512*1024)/(4*1024*1024-512*1024))
-		else:
+		else:#4 - 16MB
 			return self.__mixColor((255,128,192),(255,0,0),(data-4*1024*1024)/((16-4)*1024*1024))
+	
+	def __newMixColor(self,lc,rc,rt):
+		r = int(rc[0] + (rc[0] - lc[0])*rt)
+		g = int(rc[1] + (rc[1] - lc[1])*rt)
+		b = int(rc[2] + (rc[2] - lc[2])*rt)
+		if (r<=0):r = -r
+		if (g<=0):g = -g
+		if (b<=0):b = -b
+		return(r,g,b)
+
+	def __newGetColor(self,data):
+		qaq = data / 1024
+		if (data > 24 * 1024 * 1024):
+			return (226,140,255)
+		elif (data < 64 * 1024):#0 - 64 KB
+			return self.__newMixColor((255,255,255),(102,255,102),data/1024/64)
+			#return (int(255-(255-102)*qaq/64),255,int(255-(255-102)*qaq/64))
+		elif (data < 512 * 1024):#64 - 512 KB
+			return self.__newMixColor((102,255,102),(255,255,102),(data/1024 -64)/(512 - 64))
+			#return (int(102-(102-255)*(qaq-64)/(512 - 64)),255,102)
+		elif (data < 4*1024*1024):#512KB - 4MB
+			return self.__newMixColor((255,255,102),(255,178,102),(data/1024 - 512)/(4096 - 512))
+			#return (int(102-(102-255)),int(255-(255-178)*(qaq - 512 * 1024)/(4096 - 512 * 1024)),102)
+		elif(data < 16 * 1024 * 1024):#4 - 16MB
+			return self.__newMixColor((255,178,102),(255,102,102),(data/1024/1024 - 4)/(16 - 4))
+			#return (255,int(255-(255-102)*(data - 4)/(16 - 4)),102)
+		else:#16 - 24MB
+			return self.__newMixColor((255,102,102),(226,140,255),(data/1024/1024 - 16)/(24-16))
+			#return (int(255-(255-206)*(data - 16)/(24 - 16)),int(255-(255-140)*(data - 16)/(24 - 16)),int)
 
 	def exportAsJson(self,result):
 		result = self.__deweighting(result)
@@ -192,5 +221,4 @@ class ExportResult(object):
 			f.writelines(json.dumps(result,sort_keys=True,indent=4,separators=(',',':')))
 			f.close()
 		logger.info("Result exported as %s" % filename)
-
 

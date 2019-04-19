@@ -12,8 +12,12 @@ class ShadowsocksParser(BaseParser):
 	def __init__(self):
 		super(ShadowsocksParser,self).__init__()
 
-	def __parseLink(self,link):
+	def _parseLink(self,link):
 		_config = copy.deepcopy(self._baseShadowsocksConfig)
+
+		if (link[:5] != "ss://"):
+			logger.error("Unsupport link : %s" % link)
+			return None
 
 		urlData = urllib.parse.unquote(link)
 		urlResult = urllib.parse.urlparse(urlData)
@@ -55,6 +59,7 @@ class ShadowsocksParser(BaseParser):
 
 		if (_config["remarks"] == ""):
 			_config["remarks"] = _config["server"]
+	#	print(_config["remarks"])
 		return _config
 
 

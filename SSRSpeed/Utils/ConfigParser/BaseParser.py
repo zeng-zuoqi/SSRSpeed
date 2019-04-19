@@ -137,6 +137,7 @@ class BaseParser(object):
 		linksArr = (b64plus.decode(rep).decode("utf-8")).split("\n")
 		for link in linksArr:
 			link = link.strip()
+		#	print(link)
 			cfg = self._parseLink(link)
 			if (cfg):
 			#	print(cfg["remarks"])
