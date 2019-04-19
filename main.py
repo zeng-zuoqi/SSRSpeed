@@ -15,7 +15,8 @@ from SSRSpeed.SpeedTest.speedTest import SpeedTest
 from SSRSpeed.Result.exportResult import ExportResult
 import SSRSpeed.Result.importResult as importResult
 from SSRSpeed.Utils.checkPlatform import checkPlatform
-from SSRSpeed.Utils.LinkParser.Parser import SSRParse
+from SSRSpeed.Utils.ConfigParser.ShadowsocksParser import ShadowsocksParser as SSParser
+from SSRSpeed.Utils.ConfigParser.ShadowsocksRParser import ShadowsocksRParser as SSRParser
 from SSRSpeed.Utils.checkRequirements import checkShadowsocks
 
 from config import config
@@ -37,7 +38,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.2.4 alpha fix_1"
+VERSION = "2.2.4 alpha fix_1 update_1"
 
 def setArgsListCallback(option,opt_str,value,parser):
 	assert value is None
@@ -375,16 +376,23 @@ if (__name__ == "__main__"):
 		export(sortResult(importResult.importResult(IMPORT_FILENAME),SORT_METHOD),SPLIT_CNT,True)
 		sys.exit(0)
 
-	ssrp = SSRParse()
+	if (PROXY_TYPE == "SSR"):
+		client = SSRClient()
+		uConfigParser = SSRParser()
+	elif(PROXY_TYPE == "SS"):
+		client = SSClient()
+		uConfigParser = SSParser()
+
 	if (CONFIG_LOAD_MODE == 1):
-		ssrp.readGuiConfig(CONFIG_FILENAME)
+		uConfigParser.readGuiConfig(CONFIG_FILENAME)
 	else:
-		ssrp.readSubscriptionConfig(CONFIG_URL)
-	ssrp.excludeNode([],[],config["excludeRemarks"])
-	ssrp.filterNode(FILTER_KEYWORD,FILTER_GROUP_KRYWORD,FILTER_REMARK_KEYWORD)
-	ssrp.excludeNode(EXCLUDE_KEYWORD,EXCLUDE_GROUP_KEYWORD,EXCLUDE_REMARK_KEWORD)
-	ssrp.printNode()
-	logger.info("{} node(s) will be test.".format(len(ssrp.getAllConfig())))
+		uConfigParser.readSubscriptionConfig(CONFIG_URL)
+	uConfigParser.excludeNode([],[],config["excludeRemarks"])
+	uConfigParser.filterNode(FILTER_KEYWORD,FILTER_GROUP_KRYWORD,FILTER_REMARK_KEYWORD)
+	uConfigParser.excludeNode(EXCLUDE_KEYWORD,EXCLUDE_GROUP_KEYWORD,EXCLUDE_REMARK_KEWORD)
+	uConfigParser.printNode()
+	logger.info("{} node(s) will be test.".format(len(uConfigParser.getAllConfig())))
+
 	if (not SKIP_COMFIRMATION):
 		if (TEST_MODE == "TCP_PING"):
 			logger.info("Test mode : tcp ping only.")
@@ -415,11 +423,6 @@ if (__name__ == "__main__"):
 	totalConfCount = 0
 	curConfCount = 0
 
-	if (PROXY_TYPE == "SSR"):
-		client = SSRClient()
-	elif(PROXY_TYPE == "SS"):
-		client = SSClient()
-
 	pfInfo = checkPlatform()
 
 	if (pfInfo == "Unknown"):
@@ -427,14 +430,14 @@ if (__name__ == "__main__"):
 		sys.exit(1)
 
 	if (TEST_MODE == "ALL"):
-		configs = ssrp.getAllConfig()
+		configs = uConfigParser.getAllConfig()
 		totalConfCount = len(configs)
 		if (pfInfo == "Windows"):
 		#	config = client.getCurrrentConfig()
 			client.addConfig(configs)
 			client.startClient()
 		else:
-			config = ssrp.getNextConfig()
+			config = uConfigParser.getNextConfig()
 		while(True):
 			if (pfInfo == "Windows"):
 				config = client.getCurrrentConfig()
@@ -505,7 +508,7 @@ if (__name__ == "__main__"):
 					else:
 						config = None
 				else:
-					config = ssrp.getNextConfig()
+					config = uConfigParser.getNextConfig()
 
 				if (config == None):
 					if ((retryMode == True) or (retryList == [])):
@@ -531,7 +534,7 @@ if (__name__ == "__main__"):
 						break
 	
 	if (TEST_MODE == "TCP_PING"):
-		config = ssrp.getNextConfig()
+		config = uConfigParser.getNextConfig()
 		while (True):
 			_item = {}
 			_item["group"] = config["group"]
@@ -545,7 +548,7 @@ if (__name__ == "__main__"):
 			_item["maxDSpeed"] = -1
 			Result.append(_item)
 			logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000)))
-			config = ssrp.getNextConfig()
+			config = uConfigParser.getNextConfig()
 			if (config == None):break
 	Result = sortResult(Result,SORT_METHOD)
 	export(Result,SPLIT_CNT)
