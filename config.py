@@ -1,6 +1,8 @@
 #coding:utf-8
 
 config = {
+	"localAddress":"127.0.0.1",
+	"localPort":1087,
 	"excludeRemarks":[
 		"剩余流量",
 		"到期时间",
