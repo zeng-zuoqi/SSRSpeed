@@ -11,11 +11,12 @@ import logging
 
 from SSRSpeed.Shadowsocks.Shadowsocks import Shadowsocks as SSClient
 from SSRSpeed.Shadowsocks.ShadowsocksR import ShadowsocksR as SSRClient
-from SSRSpeed.Utils.LinkParser.Parser import SSRParse
 from SSRSpeed.SpeedTest.speedTest import SpeedTest
 from SSRSpeed.Result.exportResult import ExportResult
-from SSRSpeed.Utils.checkPlatform import checkPlatform
 import SSRSpeed.Result.importResult as importResult
+from SSRSpeed.Utils.checkPlatform import checkPlatform
+from SSRSpeed.Utils.LinkParser.Parser import SSRParse
+from SSRSpeed.Utils.checkRequirements import checkShadowsocks
 
 from config import config
 
@@ -36,7 +37,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.2.4 alpha"
+VERSION = "2.2.4 alpha fix_1"
 
 def setArgsListCallback(option,opt_str,value,parser):
 	assert value is None
@@ -228,6 +229,11 @@ def sortResult(result,sortMethod):
 
 if (__name__ == "__main__"):
 
+	print("****** Import Hint 重要提示******")
+	print("Before you publicly release your speed test results, be sure to ask the node owner if they agree to the release to avoid unnecessary disputes.")
+	print("在您公开发布测速结果之前请务必征得节点拥有着的同意,以避免一些令人烦恼的事情")
+	print("*********************************")
+	input("Press any key to conitnue or Crtl+C to exit.")
 	DEBUG = False
 	CONFIG_LOAD_MODE = 0 #0 for import result,1 for guiconfig,2 for subscription url
 	CONFIG_FILENAME = ""
@@ -282,6 +288,8 @@ if (__name__ == "__main__"):
 	if (options.proxy_type):
 		if (options.proxy_type.lower() == "ss"):
 			PROXY_TYPE = "SS"
+			if (not checkShadowsocks()):
+				sys.exit(1)
 		elif (options.proxy_type.lower() == "ssr"):
 			PROXY_TYPE = "SSR"
 		else:
@@ -376,6 +384,7 @@ if (__name__ == "__main__"):
 	ssrp.filterNode(FILTER_KEYWORD,FILTER_GROUP_KRYWORD,FILTER_REMARK_KEYWORD)
 	ssrp.excludeNode(EXCLUDE_KEYWORD,EXCLUDE_GROUP_KEYWORD,EXCLUDE_REMARK_KEWORD)
 	ssrp.printNode()
+	logger.info("{} node(s) will be test.".format(len(ssrp.getAllConfig())))
 	if (not SKIP_COMFIRMATION):
 		if (TEST_MODE == "TCP_PING"):
 			logger.info("Test mode : tcp ping only.")

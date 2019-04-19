@@ -10,7 +10,8 @@ config = {
 	],
 	"exportResult":{
 		"hideMaxSpeed":True,
-		"uploadResult":False
+		"uploadResult":False,
+		"font":"./resources/fonts/SourceHanSansCN-Medium.otf"
 	},
 	"uploadResult":{
 		"apiToken":"",

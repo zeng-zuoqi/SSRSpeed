@@ -1,7 +1,17 @@
+  
+<h1 align="center">
+    <br>SSRSpeed
+</h1>
+<p align="center">
+Batch speed measuring tool based on Shadowsocks(R)
+</p>
+<p align="center">
+   <img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/tag/NyanChanMeow/SSRSpeed.svg">
+    <img alt="GitHub release" src="https://img.shields.io/github/release/NyanChanMeow/SSRSpeed.svg">
+    <img src="https://img.shields.io/github/license/NyanChanMeow/SSRSpeed.svg">
+</p>
 
-
-# SSRSpeed
-ShadowsocksR Batch Speed Tool
+<p></p>
 
 中文文档请查看 [Readme_ZH_CN](https://github.com/NyanChanMeow/SSRSpeed/blob/master/README_ZH_CN.md)
 
@@ -9,7 +19,6 @@ ShadowsocksR Batch Speed Tool
 
 <font size=5 color=#FF0033>Before you publicly release your speed test results, be sure to ask the node owner if they agree to the release to avoid unnecessary disputes.</font>
 
- - For the copyright issue, the "msyh.ttc" font will not be provided in the repository. When using the Linux operating system, please extract the font to the root directory of the program to export the resulting image.
  - SpeedTestNet is no longer supported.
 
 ## Features
@@ -93,9 +102,12 @@ The parameter priority is as follows:
 The program has a built-in rule matching mode that allows specific ISPs or nodes in specific regions to use specific speed sources through custom rules for "Socket" test mode.Rules need to be written in config.py. Please see config.py for more details.
 
 ## Developers
-- Initial version [@ranwen](https://github.com/ranwen)
+- [@ranwen](https://github.com/ranwen)
 
 ## Acknowledgement
-
+-  **Bugs Report**
+-  [Professional-V1](https://t.me/V1_BLOG)
+-  [Julydate 七夏浅笑](https://www.julydate.com/)
+**--------------------------**<br>
 -  [speedtest-cli](https://github.com/sivel/speedtest-cli)
 -  [Fast.com-cli](https://github.com/nkgilley/fast.com)

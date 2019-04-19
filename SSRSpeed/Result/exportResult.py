@@ -29,8 +29,10 @@ class ExportResult(object):
 	def __init__(self):
 		self.__config = config["exportResult"]
 		self.hideMaxSpeed = self.__config["hideMaxSpeed"]
+		self.__font = ImageFont.truetype(self.__config["font"],18)
 
-	def __getMaxWeight(self,result,font):
+	def __getMaxWeight(self,result):
+		font = self.__font
 		draw = ImageDraw.Draw(Image.new("RGB",(1,1),(255,255,255)))
 		maxGroupWeight = 0
 		maxRemarkWeight = 0
@@ -57,17 +59,15 @@ class ExportResult(object):
 			if (not isFound):
 				_result.append(r)
 		return _result
-				
-
 
 	def exportAsPng(self,result,id=0):
 		result = self.__deweighting(result)
-		resultFont = ImageFont.truetype("msyh.ttc",18)
+	#	print(self.__font)
+		resultFont = self.__font
 
 		generatedTime = time.localtime()
-
 		imageHeight = len(result) * 30 + 30
-		weight = self.__getMaxWeight(result,resultFont)
+		weight = self.__getMaxWeight(result)
 		groupWeight = weight[0]
 		remarkWeight = weight[1]
 		if (groupWeight < 60):

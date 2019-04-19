@@ -73,10 +73,10 @@ class Shadowsocks(Base):
 					f.write(json.dumps(self._config))
 					f.close()
 				if (logger.level == logging.DEBUG):
-					self._process = subprocess.Popen(["ss-local","-c","%s/config.json" % os.getcwd()])
+					self._process = subprocess.Popen(["ss-local","-v","-c","%s/config.json" % os.getcwd()])
 				else:
 					self._process = subprocess.Popen(["ss-local","-c","%s/config.json" % os.getcwd()],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-				logger.info("Starting ShadowsocksR-Python with server %s:%d" % (config["server"],config["server_port"]))
+				logger.info("Starting Shadowsocks-libev with server %s:%d" % (config["server"],config["server_port"]))
 			else:
 				logger.critical("Your system does not supported.Please contact developer.")
 				sys.exit(1)

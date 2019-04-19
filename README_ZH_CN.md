@@ -1,14 +1,23 @@
+  
+<h1 align="center">
+    <br>SSRSpeed
+</h1>
+<p align="center">
+基于Shadowsocks(R)的批量测速工具
+</p>
+<p align="center">
+   <img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/tag/NyanChanMeow/SSRSpeed.svg">
+    <img alt="GitHub release" src="https://img.shields.io/github/release/NyanChanMeow/SSRSpeed.svg">
+    <img src="https://img.shields.io/github/license/NyanChanMeow/SSRSpeed.svg">
+</p>
 
-
-# SSRSpeed
-Shadowsocks[R] 批量测速工具
+<p></p>
 
 
 ## 重要提示
 
 <font size=5 color=#FF0033>在您公开发布测速结果之前请务必征得节点拥有着的同意以避免一些令人烦恼的事情</font>
 
- - 出于版权问题“msyh.ttc”字体不会在该仓库提供，在使用Linux操作系统时请您自行提取该字体至程序根目录下以正常导出结果图片
  - SpeedTestNet方式已停止支持
 
 
@@ -89,9 +98,12 @@ pip3 install -r requirements.txt
 程序拥有内置的规则匹配模式通过自定义规则匹配特定ISP或者特定地区的节点使用特定的下载测速源，规则已内置于config.py文件中，查看它以获得更多的信息。
 
 ## 开发者
-- 初始版本 [@ranwen](https://github.com/ranwen)
+- [@ranwen](https://github.com/ranwen)
 
 ## 感谢
-
+ - **Bugs Report**
+- [Professional-V1](https://t.me/V1_BLOG)
+- [Julydate 七夏浅笑](https://www.julydate.com/)
+**--------------------------**<br>
 -  [speedtest-cli](https://github.com/sivel/speedtest-cli)
 -  [Fast.com-cli](https://github.com/nkgilley/fast.com)
