@@ -38,7 +38,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.2.4 alpha fix_2"
+VERSION = "2.2.4 beta 1"
 
 def setArgsListCallback(option,opt_str,value,parser):
 	assert value is None
@@ -156,6 +156,13 @@ def setOpts(parser):
 		help="Skip node list confirmation before test."
 		)
 	parser.add_option(
+		"-C","--color",
+		action="store",
+		dest="result_color",
+		default="",
+		help="Set the colors when exporting images.."
+		)
+	parser.add_option(
 		"-s","--split",
 		action="store",
 		dest="split_count",
@@ -191,10 +198,12 @@ def setOpts(parser):
 		help="如题"
 		)
 
-def export(Result,split = 0,exportOnly = False):
+def export(Result,split = 0,exportType= 0,color="origin"):
 	er = ExportResult()
-	if (not exportOnly):
+	er.setColors(color)
+	if (not exportType):
 		er.exportAsJson(Result)
+		return
 	if (split > 0):
 		i = 0
 		id = 1
@@ -247,6 +256,7 @@ if (__name__ == "__main__"):
 	SPLIT_CNT = 0
 	SORT_METHOD = ""
 	SKIP_COMFIRMATION = False
+	RESULT_IMAGE_COLOR = "origin"
 
 	parser = OptionParser(usage="Usage: %prog [options] arg1 arg2...",version="SSR Speed Tool " + VERSION)
 	setOpts(parser)
@@ -320,6 +330,9 @@ if (__name__ == "__main__"):
 	if (len(sys.argv) == 1):
 		parser.print_help()
 		exit(0)
+	
+	if (options.result_color):
+		RESULT_IMAGE_COLOR = options.result_color
 
 	if (options.import_file):
 		CONFIG_LOAD_MODE = 0
@@ -374,7 +387,7 @@ if (__name__ == "__main__"):
 
 	if (options.import_file and CONFIG_LOAD_MODE == 0):
 		IMPORT_FILENAME = options.import_file
-		export(sortResult(importResult.importResult(IMPORT_FILENAME),SORT_METHOD),SPLIT_CNT,True)
+		export(sortResult(importResult.importResult(IMPORT_FILENAME),SORT_METHOD),SPLIT_CNT,2,RESULT_IMAGE_COLOR)
 		sys.exit(0)
 
 	if (PROXY_TYPE == "SSR"):
@@ -552,8 +565,9 @@ if (__name__ == "__main__"):
 			logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000)))
 			config = uConfigParser.getNextConfig()
 			if (config == None):break
+	export(Result)
 	Result = sortResult(Result,SORT_METHOD)
-	export(Result,SPLIT_CNT)
+	export(Result,SPLIT_CNT,2,RESULT_IMAGE_COLOR)
 	time.sleep(1)
 	if(checkPlatform() == "Windows"):
 		if (input("Do you want to turn off client ? (Y/N)").lower() == "y"):

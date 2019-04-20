@@ -11,7 +11,30 @@ config = {
 	"exportResult":{
 		"hideMaxSpeed":True,
 		"uploadResult":False,
-		"font":"./resources/fonts/SourceHanSansCN-Medium.otf"
+		"font":"./resources/fonts/SourceHanSansCN-Medium.otf",
+		"colors":[
+			{
+				"name":"origin",
+				"colors":{
+					"0.064":[128,255,0],
+					"0.512":[255,255,0],
+					"4.0":[255,128,192],
+					"16.0":[255,0,0]
+				}
+			},
+			{
+				"name":"new",
+				"colors":{
+					"0.064":[102,255,102],
+					"0.512":[255,255,102],
+					"4.0":[255,178,102],
+					"16.0":[255,102,102],
+					"24.0":[226,140,255],
+					"32.0":[102,204,255],
+					"40.0":[102,102,255]
+				}
+			}
+		]
 	},
 	"uploadResult":{
 		"apiToken":"",

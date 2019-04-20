@@ -29,7 +29,93 @@ class ExportResult(object):
 	def __init__(self):
 		self.__config = config["exportResult"]
 		self.hideMaxSpeed = self.__config["hideMaxSpeed"]
+		self.__colors = {}
+		self.__colorSpeedList = []
 		self.__font = ImageFont.truetype(self.__config["font"],18)
+	#	self.setColors()
+
+	def setColors(self,name = "origin"):
+		for color in self.__config["colors"]:
+			if (color["name"] == name):
+				logger.info("Set colors as {}.".format(name))
+				self.__colors = color["colors"]
+				self.__colorSpeedList.append(0)
+				for speed in self.__colors.keys():
+					try:
+						self.__colorSpeedList.append(float(speed))
+					except:
+						continue
+				self.__colorSpeedList.sort()
+				return
+		logger.warn("Color {} not found in config.".format(name))
+
+	def colorTest(self):
+		result = []
+		_dict={
+				"dspeed":0.0,
+				"maxSpeed":0.0,
+				"group":"Color Test",
+				"remarks":"",
+				"ping":0.0,
+				"loss":0.0
+			}
+		result.append(_dict)
+		_dict={
+				"dspeed":32.0 * 1024,
+				"maxSpeed":0.0,
+				"group":"Color Test",
+				"remarks":"",
+				"ping":0.0,
+				"loss":0.0
+			}
+		result.append(_dict)
+		_dict={
+				"dspeed":64.0 * 1024,
+				"maxSpeed":0.0,
+				"group":"Color Test",
+				"remarks":"",
+				"ping":0.0,
+				"loss":0.0
+			}
+		result.append(_dict)
+		_dict={
+				"dspeed":128.0 * 1024,
+				"maxSpeed":0.0,
+				"group":"Color Test",
+				"remarks":"",
+				"ping":0.0,
+				"loss":0.0
+			}
+		result.append(_dict)
+		_dict={
+				"dspeed":256.0 * 1024,
+				"maxSpeed":0.0,
+				"group":"Color Test",
+				"remarks":"",
+				"ping":0.0,
+				"loss":0.0
+			}
+		result.append(_dict)
+		_dict={
+				"dspeed":512.0 * 1024,
+				"maxSpeed":0.0,
+				"group":"Color Test",
+				"remarks":"",
+				"ping":0.0,
+				"loss":0.0
+			}
+		result.append(_dict)
+		for i in range(2,86):
+			_dict={
+				"dspeed":512 * i * 1024,
+				"maxSpeed":0.0,
+				"group":"Color Test",
+				"remarks":"",
+				"ping":0.0,
+				"loss":0.0
+			}
+			result.append(_dict)
+		self.exportAsPng(result)
 
 	def __getMaxWeight(self,result):
 		font = self.__font
@@ -61,10 +147,10 @@ class ExportResult(object):
 		return _result
 
 	def exportAsPng(self,result,id=0):
+		if (self.__colorSpeedList == []):
+			self.setColors()
 		result = self.__deweighting(result)
-	#	print(self.__font)
 		resultFont = self.__font
-
 		generatedTime = time.localtime()
 		imageHeight = len(result) * 30 + 30
 		weight = self.__getMaxWeight(result)
@@ -170,10 +256,15 @@ class ExportResult(object):
 		else:
 			return("%.2fMB" % speed)
 
-	def __mixColor(self,lc,rc,rt):
-		return (int(lc[0]*(1-rt)+rc[0]*rt),int(lc[1]*(1-rt)+rc[1]*rt),int(lc[2]*(1-rt)+rc[2]*rt))
+	def __newMixColor(self,lc,rc,rt):
+	#	print("RGB1 : {}, RGB2 : {}, RT : {}".format(lc,rc,rt))
+		return (
+			int(lc[0]*(1-rt)+rc[0]*rt),
+			int(lc[1]*(1-rt)+rc[1]*rt),
+			int(lc[2]*(1-rt)+rc[2]*rt)
+		)
 
-	def __getColor(self,data):
+	def __newGetColor(self,data):
 		if (data > 16 * 1024 * 1024):
 			return (255,0,0)
 		elif (data < 64 * 1024):#0 - 64 KB
@@ -185,34 +276,53 @@ class ExportResult(object):
 		else:#4 - 16MB
 			return self.__mixColor((255,128,192),(255,0,0),(data-4*1024*1024)/((16-4)*1024*1024))
 	
-	def __newMixColor(self,lc,rc,rt):
-		r = int(rc[0] + (rc[0] - lc[0])*rt)
-		g = int(rc[1] + (rc[1] - lc[1])*rt)
-		b = int(rc[2] + (rc[2] - lc[2])*rt)
-		if (r<=0):r = -r
-		if (g<=0):g = -g
-		if (b<=0):b = -b
-		return(r,g,b)
+	def __mixColor(self,lc,rc,rt):
+		return (
+			int(lc[0]*(1-rt)+rc[0]*rt),
+			int(lc[1]*(1-rt)+rc[1]*rt),
+			int(lc[2]*(1-rt)+rc[2]*rt)
+		)
 
-	def __newGetColor(self,data):
-		qaq = data / 1024
-		if (data > 24 * 1024 * 1024):
-			return (226,140,255)
+	def __getColor(self,data):
+		if (self.__colorSpeedList == []):
+			return (255,255,255)
+		rt = 1
+		curSpeed = self.__colorSpeedList[len(self.__colorSpeedList)-1]
+		backSpeed = 0
+		if (data >= curSpeed  * 1024 * 1024):
+			return (self.__colors[str(curSpeed)][0],self.__colors[str(curSpeed)][1],self.__colors[str(curSpeed)][2])
+		for i in range (0,len(self.__colorSpeedList)):
+			curSpeed = self.__colorSpeedList[i] * 1024 * 1024
+			if (i > 0):
+				backSpeed = self.__colorSpeedList[i-1]
+			backSpeedStr = str(backSpeed)
+		#	print("{} {}".format(data/1024/1024,backSpeed))
+			if (data < curSpeed):
+				rgb1 = self.__colors[backSpeedStr] if backSpeed > 0 else (255,255,255)
+				rgb2 = self.__colors[str(self.__colorSpeedList[i])]
+				rt = (data - backSpeed * 1024 * 1024)/(curSpeed - backSpeed * 1024 * 1024)
+				logger.debug("Speed : {}, RGB1 : {}, RGB2 : {}, RT : {}".format(data/1024/1024,rgb1,rgb2,rt))
+				return self.__newMixColor(rgb1,rgb2,rt)
+
+
+	def __bakgetColor(self,data):
+		print("Speed {}, ".format(data/1024/1024),end="")
+		if (data > 40 * 1024 * 1024):
+			return (102,102,255)
 		elif (data < 64 * 1024):#0 - 64 KB
 			return self.__newMixColor((255,255,255),(102,255,102),data/1024/64)
-			#return (int(255-(255-102)*qaq/64),255,int(255-(255-102)*qaq/64))
 		elif (data < 512 * 1024):#64 - 512 KB
-			return self.__newMixColor((102,255,102),(255,255,102),(data/1024 -64)/(512 - 64))
-			#return (int(102-(102-255)*(qaq-64)/(512 - 64)),255,102)
+			return self.__newMixColor((102,255,102),(255,255,102),(data-64*1024)/(512*1024-64*1024))
 		elif (data < 4*1024*1024):#512KB - 4MB
-			return self.__newMixColor((255,255,102),(255,178,102),(data/1024 - 512)/(4096 - 512))
-			#return (int(102-(102-255)),int(255-(255-178)*(qaq - 512 * 1024)/(4096 - 512 * 1024)),102)
+			return self.__newMixColor((255,255,102),(255,178,102),(data-512*1024)/(4*1024*1024-512*1024))
 		elif(data < 16 * 1024 * 1024):#4 - 16MB
-			return self.__newMixColor((255,178,102),(255,102,102),(data/1024/1024 - 4)/(16 - 4))
-			#return (255,int(255-(255-102)*(data - 4)/(16 - 4)),102)
-		else:#16 - 24MB
-			return self.__newMixColor((255,102,102),(226,140,255),(data/1024/1024 - 16)/(24-16))
-			#return (int(255-(255-206)*(data - 16)/(24 - 16)),int(255-(255-140)*(data - 16)/(24 - 16)),int)
+			return self.__newMixColor((255,178,102),(255,102,102),(data-4*1024*1024)/((16-4)*1024*1024))
+		elif(data < 24 * 1024 * 1024):#16 - 24MB
+			return self.__newMixColor((255,102,102),(226,140,255),(data - 16*1024*1024)/((24-16)*1024*1024))
+		elif(data < 32 * 1024 * 1024):#24 - 32MB
+			return self.__newMixColor((226,140,255),(102,204,255),(data-24*1024*1024)/((32-24)*1024*1024))
+		else:#32 - 40 MB
+			return self.__newMixColor((102,204,255),(102,102,255),(data-32*1024*1024)/((40-32)*1024*1024))
 
 	def exportAsJson(self,result):
 		result = self.__deweighting(result)
