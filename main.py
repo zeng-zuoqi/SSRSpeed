@@ -38,7 +38,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.2.4 beta 2"
+VERSION = "2.2.4 beta 2.1"
 
 def setArgsListCallback(option,opt_str,value,parser):
 	assert value is None
