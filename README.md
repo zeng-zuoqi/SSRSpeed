@@ -1,3 +1,4 @@
+
   
 <h1 align="center">
     <br>SSRSpeed
@@ -13,7 +14,8 @@ Batch speed measuring tool based on Shadowsocks(R)
 
 <p></p>
 
-中文文档请查看 [Readme_ZH_CN](https://github.com/NyanChanMeow/SSRSpeed/blob/master/README_ZH_CN.md)
+## Links
+ - [中文文档](https://github.com/NyanChanMeow/SSRSpeed/blob/master/README_ZH_CN.md)
 
 ## Important Hint
 
@@ -37,7 +39,7 @@ Universal dependency
 - pysocks
 
 Linux dependency
- - libsodium
+ - [libsodium](https://github.com/jedisct1/libsodium)
  - [Shadowsocks-libev](https://github.com/shadowsocks/shadowsocks-libev)
  - [Simple-Obfs](https://github.com/shadowsocks/simple-obfs)
 
@@ -72,6 +74,8 @@ pip3 install -r requirements.txt
       -t PROXY_TYPE, --type=PROXY_TYPE
                             Select proxy type in [ssr,ss],default ssr.
       -y, --yes             Skip node list confirmation before test.
+      -C RESULT_COLOR, --color=RESULT_COLOR
+                        Set the colors when exporting images..
       -s SPLIT_COUNT, --split=SPLIT_COUNT
                             Set the number of nodes displayed in a single image
                             when exporting images.
@@ -99,15 +103,20 @@ The parameter priority is as follows:
 
 ## Advanced Usage
 
-The program has a built-in rule matching mode that allows specific ISPs or nodes in specific regions to use specific speed sources through custom rules for "Socket" test mode.Rules need to be written in config.py. Please see config.py for more details.
+ - **Rules**
+	 - The program has a built-in rule matching mode that allows specific ISPs or nodes in specific regions to use specific speed sources through custom rules for "Socket" test mode.Rules need to be written in config.py. Please see config.py for more details.
+- **Custom color**
+   - Users can customize the color of the resulting image in config.py. See the config.py file for sample configuration.
 
 ## Developers
 - [@ranwen](https://github.com/ranwen)
 
 ## Acknowledgement
--  **Bugs Report**
--  [Professional-V1](https://t.me/V1_BLOG)
--  [Julydate 七夏浅笑](https://www.julydate.com/)
-**--------------------------**<br>
--  [speedtest-cli](https://github.com/sivel/speedtest-cli)
--  [Fast.com-cli](https://github.com/nkgilley/fast.com)
+ - New color scheme
+   - Chunxiaoyi 纯小亦
+-  Bugs Report
+   - [Professional-V1](https://t.me/V1_BLOG)
+   -  [Julydate 七夏浅笑](https://www.julydate.com/)
+- This project uses the following open source projects
+   -  [speedtest-cli](https://github.com/sivel/speedtest-cli)
+   -  [Fast.com-cli](https://github.com/nkgilley/fast.com)

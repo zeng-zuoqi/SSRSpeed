@@ -1,3 +1,4 @@
+
   
 <h1 align="center">
     <br>SSRSpeed
@@ -16,7 +17,7 @@
 
 ## 重要提示
 
-<font size=5 color=#FF0033>在您公开发布测速结果之前请务必征得节点拥有着的同意以避免一些令人烦恼的事情</font>
+<font size=5 color=#FF0033>在您公开发布测速结果之前请务必征得节点拥有者的同意以避免一些令人烦恼的事情</font>
 
  - SpeedTestNet方式已停止支持
 
@@ -36,7 +37,7 @@
 - pysocks
 
 Linux 依赖
- - libsodium
+ - [libsodium](https://github.com/jedisct1/libsodium)
  - [Shadowsocks-libev](https://github.com/shadowsocks/shadowsocks-libev)
  - [Simple-Obfs](https://github.com/shadowsocks/simple-obfs)
 
@@ -71,6 +72,8 @@ pip3 install -r requirements.txt
       -t PROXY_TYPE, --type=PROXY_TYPE
                             选择代理类型[ssr,ss]，默认为ssr
       -y, --yes             跳过节点信息确认直接进行测试
+      -C RESULT_COLOR, --color=RESULT_COLOR
+                            选择导出图片的配色方案
       -s SPLIT_COUNT, --split=SPLIT_COUNT
                             设置单张结果图片显示的节点数量，会自动导出多张图片
       -S SORT_METHOD, --sort=SORT_METHOD
@@ -95,15 +98,21 @@ pip3 install -r requirements.txt
 > 当以上三个参数中多于一个被使用时，参数的采用顺序如上所示，将从优先级最大的参数开始过滤。
 
 ## 高级用法
-程序拥有内置的规则匹配模式通过自定义规则匹配特定ISP或者特定地区的节点使用特定的下载测速源，规则已内置于config.py文件中，查看它以获得更多的信息。
+ - **规则**
+   - 程序拥有内置的规则匹配模式通过自定义规则匹配特定ISP或者特定地区的节点使用特定的下载测速源，规则已内置于config.py文件中，查看它以获得更多的信息。
+  
+ - **自定义配色**
+   - 用户可以通过修改 config.py 中的配色部分和 -C 参数来自定义导出图片的配色方案，请查看 config.py 文件获得更多细节。
 
 ## 开发者
 - [@ranwen](https://github.com/ranwen)
 
 ## 感谢
- - **Bugs Report**
-- [Professional-V1](https://t.me/V1_BLOG)
-- [Julydate 七夏浅笑](https://www.julydate.com/)
-**--------------------------**<br>
--  [speedtest-cli](https://github.com/sivel/speedtest-cli)
--  [Fast.com-cli](https://github.com/nkgilley/fast.com)
+- New color scheme
+   - Chunxiaoyi 纯小亦
+- Bugs Report
+   -  [Professional-V1](https://t.me/V1_BLOG)
+   -  [Julydate 七夏浅笑](https://www.julydate.com/)
+- This project uses the following open source projects
+   -  [speedtest-cli](https://github.com/sivel/speedtest-cli)
+   -  [Fast.com-cli](https://github.com/nkgilley/fast.com)

@@ -38,7 +38,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.2.4 beta 1"
+VERSION = "2.2.4 beta 2"
 
 def setArgsListCallback(option,opt_str,value,parser):
 	assert value is None
@@ -278,7 +278,7 @@ if (__name__ == "__main__"):
 
 	print("****** Import Hint 重要提示******")
 	print("Before you publicly release your speed test results, be sure to ask the node owner if they agree to the release to avoid unnecessary disputes.")
-	print("在您公开发布测速结果之前请务必征得节点拥有着的同意,以避免一些令人烦恼的事情")
+	print("在您公开发布测速结果之前请务必征得节点拥有者的同意,以避免一些令人烦恼的事情")
 	print("*********************************")
 	input("Press ENTER to conitnue or Crtl+C to exit.")
 
