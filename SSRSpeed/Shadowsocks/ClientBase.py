@@ -25,16 +25,7 @@ class Base(object):
 	def _checkPlatform(self):
 		return checkPlatform()
 
-	def addConfig(self,configList):
-		self._configList = configList
-
 	def startClient(self,config={}):
-		pass
-
-	def getCurrrentConfig(self):
-		pass
-	
-	def nextWinConf(self):
 		pass
 
 	def stopClient(self):
@@ -46,7 +37,7 @@ class Base(object):
 				self._process.send_signal(signal.SIGINT)
 	#		print (self.__process.returncode)
 			self._process = None
-			logger.info("Shadowsocks(R) terminated.")
+			logger.info("Client terminated.")
 	#	self.__ssrProcess.terminate()
 
 if (__name__ == "__main__"):

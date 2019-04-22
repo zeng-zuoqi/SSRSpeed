@@ -30,6 +30,7 @@ class ShadowsocksR(Base):
 					self._process = subprocess.Popen(["./clients/shadowsocksr-libev/ssr-local.exe","-c","{}/config.json".format(os.getcwd()),"-v"])
 				else:
 					self._process = subprocess.Popen(["./clients/shadowsocksr-libev/ssr-local.exe","-c","{}/config.json".format(os.getcwd())],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+				logger.info("Starting ShadowsocksR-libev with server %s:%d" % (config["server"],config["server_port"]))
 			elif(self._checkPlatform() == "Linux" or self._checkPlatform() == "MacOS"):
 				if (logger.level == logging.DEBUG):
 					self._process = subprocess.Popen(["python3","./clients/shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()])

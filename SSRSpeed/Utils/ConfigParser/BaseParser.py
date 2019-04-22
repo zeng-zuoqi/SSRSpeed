@@ -12,6 +12,7 @@ logger = logging.getLogger("Sub")
 
 
 import SSRSpeed.Utils.b64plus as b64plus
+import SSRSpeed.Utils.ConfigParser.BaseConfig.ShadowsocksBaseConfig as SSBaseConf
 from config import config
 
 LOCAL_ADDRESS = config["localAddress"]
@@ -21,24 +22,31 @@ TIMEOUT = 10
 class BaseParser(object):
 	def __init__(self):
 		self._configList = []
-		self._baseShadowsocksConfig = {
-			"server":"",
-			"server_port":-1,
-			"method":"",
-			"protocol":"",
-			"obfs":"",
-			"plugin":"",
-			"password":"",
-			"protocol_param":"",
-			"obfsparam":"",
-			"plugin_opts":"",
-			"plugin_args":"",
-			"remarks":"",
-			"group":"N/A",
-			"timeout":TIMEOUT,
-			"local_port":LOCAL_PORT,
-			"local_address":LOCAL_ADDRESS,
-			"fastopen":False
+		self._baseShadowsocksConfig = SSBaseConf.getConfig()
+		self._baseShadowsocksConfig["timeout"] = TIMEOUT
+		self._baseShadowsocksConfig["localPort"] = LOCAL_PORT
+		self._baseShadowsocksConfig["localAddress"] = LOCAL_ADDRESS
+		self._baseV2RayConfig = {
+			"plusMsgs":{
+				"group":"N/A",
+				"remarks":""
+			},
+			"log":{
+				"loglevel":"error"
+			},
+			"inbounds": [
+				{
+					"listen":LOCAL_ADDRESS,
+					"port": LOCAL_PORT,
+					"protocol": "socks",
+					"settings": {
+						"auth": "noauth"
+					}
+				}
+			],
+			"outbounds": [
+				
+			]
 		}
 
 	def _parseLink(self,link):

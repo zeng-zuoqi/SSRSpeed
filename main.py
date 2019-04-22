@@ -12,12 +12,14 @@ import logging
 
 from SSRSpeed.Shadowsocks.Shadowsocks import Shadowsocks as SSClient
 from SSRSpeed.Shadowsocks.ShadowsocksR import ShadowsocksR as SSRClient
+from SSRSpeed.Shadowsocks.V2Ray import V2Ray as V2RayClient
 from SSRSpeed.SpeedTest.speedTest import SpeedTest
 from SSRSpeed.Result.exportResult import ExportResult
 import SSRSpeed.Result.importResult as importResult
 from SSRSpeed.Utils.checkPlatform import checkPlatform
 from SSRSpeed.Utils.ConfigParser.ShadowsocksParser import ShadowsocksParser as SSParser
 from SSRSpeed.Utils.ConfigParser.ShadowsocksRParser import ShadowsocksRParser as SSRParser
+from SSRSpeed.Utils.ConfigParser.V2RayParser import V2RayParser
 from SSRSpeed.Utils.checkRequirements import checkShadowsocks
 
 from config import config
@@ -39,7 +41,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.2.4 beta 2.1"
+VERSION = "2.2.4 beta 4"
 
 def setArgsListCallback(option,opt_str,value,parser):
 	assert value is None
@@ -147,7 +149,7 @@ def setOpts(parser):
 		action="store",
 		dest="proxy_type",
 		default = "ssr",
-		help="Select proxy type in [ssr,ss],default ssr."
+		help="Select proxy type in [ssr,ss,v2ray],default ssr."
 		)
 	parser.add_option(
 		"-y","--yes",
@@ -305,6 +307,8 @@ if (__name__ == "__main__"):
 				sys.exit(1)
 		elif (options.proxy_type.lower() == "ssr"):
 			PROXY_TYPE = "SSR"
+		elif (options.proxy_type.lower() == "v2ray"):
+			PROXY_TYPE = "V2RAY"
 		else:
 			logger.warn("Unknown proxy type {} ,using default ssr.".format(options.proxy_type))
 
@@ -397,6 +401,9 @@ if (__name__ == "__main__"):
 	elif(PROXY_TYPE == "SS"):
 		client = SSClient()
 		uConfigParser = SSParser()
+	elif(PROXY_TYPE == "V2RAY"):
+		client = V2RayClient()
+		uConfigParser = V2RayParser()
 
 	if (CONFIG_LOAD_MODE == 1):
 		uConfigParser.readGuiConfig(CONFIG_FILENAME)
@@ -449,27 +456,13 @@ if (__name__ == "__main__"):
 	if (TEST_MODE == "ALL"):
 		configs = uConfigParser.getAllConfig()
 		totalConfCount = len(configs)
-	#	if (pfInfo == "Windows"):
-		#	config = client.getCurrrentConfig()
-	#		client.addConfig(configs)
-	#		client.startClient()
-	#	else:
 		config = uConfigParser.getNextConfig()
 		time.sleep(2)
 		while(True):
-		#	if (pfInfo == "Windows"):
-		#		uConfig = uConfigParser.getNextConfig()
-		#		config = client.getCurrrentConfig()
-		#		logger.debug("config1 : {}\nconfig2 : {}".format(json.dumps(uConfig),json.dumps(config)))
-		#		if (uConfig.get("group","N/A") == config.get("group","N/A") and uConfig.get("remarks",uConfig["server"]) == config.get("remarks"),config["server"]):
-		#			pass
-		#		else:
-		#			logger.warn("ShadowsocksR C# config does not matched.\nconfig1 : {}\nconfig2 : {}".format(json.dumps(uConfig),json.dumps(config)))
 			_item = {}
 			_item["group"] = config.get("group","N/A")
 			_item["remarks"] = config.get("remarks",config["server"])
 			config["server_port"] = int(config["server_port"])
-		#	if (pfInfo != "Windows"):
 			client.startClient(config)
 			curConfCount += 1
 			logger.info("Starting test for %s - %s [%d/%d]" % (_item["group"],_item["remarks"],curConfCount,totalConfCount))
@@ -495,14 +488,12 @@ if (__name__ == "__main__"):
 					_item["dspeed"] = 0
 					_item["maxDSpeed"] = 0
 					_item["rawSocketSpeed"] = []
-			#	if (pfInfo != "Windows"):
 				client.stopClient()
 				time.sleep(1)
 				_item["loss"] = 1 - latencyTest[1]
 				_item["ping"] = latencyTest[0]
 			#	_item["gping"] = st.googlePing()
 				_item["gping"] = 0
-			#	if (pfInfo != "Windows"):
 				if ((int(_item["dspeed"]) == 0) and (int(latencyTest[0] * 1000) != 0) and (retryMode == False)):
 					retryList.append(_item)
 					retryConfig.append(config)
@@ -520,11 +511,7 @@ if (__name__ == "__main__"):
 			except Exception:
 				client.stopClient()
 				logger.exception("")
-		#	if (pfInfo == "Windows"):
-		#		if (not client.nextWinConf()):
-		#			break
-		#		time.sleep(1)
-		#	else:
+
 			if (True):
 				client.stopClient()
 				if (retryMode):
@@ -578,11 +565,5 @@ if (__name__ == "__main__"):
 	export(Result)
 	Result = sortResult(Result,SORT_METHOD)
 	export(Result,SPLIT_CNT,2,RESULT_IMAGE_COLOR)
-	time.sleep(1)
-	#if(checkPlatform() == "Windows"):
-	#	if (input("Do you want to turn off client ? (Y/N)").lower() == "y"):
-	#		client.stopClient()
-	#	else:
-	#		logger.info("Please manually turn off client.")
 
 
