@@ -1,4 +1,4 @@
 pillow
 requests
-requests[socks]
 pysocks
+flask

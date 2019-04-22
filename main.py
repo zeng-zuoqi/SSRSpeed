@@ -4,6 +4,7 @@ import time
 import traceback
 import sys
 import os
+import json
 import _thread
 import platform
 from optparse import OptionParser
@@ -407,13 +408,15 @@ if (__name__ == "__main__"):
 	uConfigParser.printNode()
 	logger.info("{} node(s) will be test.".format(len(uConfigParser.getAllConfig())))
 
+	if (TEST_MODE == "TCP_PING"):
+		logger.info("Test mode : tcp ping only.")
+	#	print("Your test mode is tcp ping only.")
+	else:
+		logger.info("Test mode : speed and tcp ping.\nTest method : %s." % TEST_METHOD)
+	#	print("Your test mode : speed and tcp ping.\nTest method : %s." % TEST_METHOD)
+
 	if (not SKIP_COMFIRMATION):
-		if (TEST_MODE == "TCP_PING"):
-			logger.info("Test mode : tcp ping only.")
-		#	print("Your test mode is tcp ping only.")
-		else:
-			logger.info("Test mode : speed and tcp ping.\nTest method : %s." % TEST_METHOD)
-		#	print("Your test mode : speed and tcp ping.\nTest method : %s." % TEST_METHOD)
+		
 		ans = input("Before the test please confirm the nodes,Ctrl-C to exit. (Y/N)")
 		if (ans == "Y"):
 			pass
@@ -446,22 +449,28 @@ if (__name__ == "__main__"):
 	if (TEST_MODE == "ALL"):
 		configs = uConfigParser.getAllConfig()
 		totalConfCount = len(configs)
-		if (pfInfo == "Windows"):
+	#	if (pfInfo == "Windows"):
 		#	config = client.getCurrrentConfig()
-			client.addConfig(configs)
-			client.startClient()
-		else:
-			config = uConfigParser.getNextConfig()
+	#		client.addConfig(configs)
+	#		client.startClient()
+	#	else:
+		config = uConfigParser.getNextConfig()
 		time.sleep(2)
 		while(True):
-			if (pfInfo == "Windows"):
-				config = client.getCurrrentConfig()
+		#	if (pfInfo == "Windows"):
+		#		uConfig = uConfigParser.getNextConfig()
+		#		config = client.getCurrrentConfig()
+		#		logger.debug("config1 : {}\nconfig2 : {}".format(json.dumps(uConfig),json.dumps(config)))
+		#		if (uConfig.get("group","N/A") == config.get("group","N/A") and uConfig.get("remarks",uConfig["server"]) == config.get("remarks"),config["server"]):
+		#			pass
+		#		else:
+		#			logger.warn("ShadowsocksR C# config does not matched.\nconfig1 : {}\nconfig2 : {}".format(json.dumps(uConfig),json.dumps(config)))
 			_item = {}
-			_item["group"] = config.get("group","Group NULL")
-			_item["remarks"] = config.get("remarks","Remark NULL")
+			_item["group"] = config.get("group","N/A")
+			_item["remarks"] = config.get("remarks",config["server"])
 			config["server_port"] = int(config["server_port"])
-			if (pfInfo != "Windows"):
-				client.startClient(config)
+		#	if (pfInfo != "Windows"):
+			client.startClient(config)
 			curConfCount += 1
 			logger.info("Starting test for %s - %s [%d/%d]" % (_item["group"],_item["remarks"],curConfCount,totalConfCount))
 			time.sleep(1)
@@ -486,17 +495,17 @@ if (__name__ == "__main__"):
 					_item["dspeed"] = 0
 					_item["maxDSpeed"] = 0
 					_item["rawSocketSpeed"] = []
-				if (pfInfo != "Windows"):
-					client.stopClient()
+			#	if (pfInfo != "Windows"):
+				client.stopClient()
 				time.sleep(1)
 				_item["loss"] = 1 - latencyTest[1]
 				_item["ping"] = latencyTest[0]
 			#	_item["gping"] = st.googlePing()
 				_item["gping"] = 0
-				if (pfInfo != "Windows"):
-					if ((int(_item["dspeed"]) == 0) and (int(latencyTest[0] * 1000) != 0) and (retryMode == False)):
-						retryList.append(_item)
-						retryConfig.append(config)
+			#	if (pfInfo != "Windows"):
+				if ((int(_item["dspeed"]) == 0) and (int(latencyTest[0] * 1000) != 0) and (retryMode == False)):
+					retryList.append(_item)
+					retryConfig.append(config)
 				Result.append(_item)
 				logger.info(
 					"%s - %s - Loss:%s%% - TCP_Ping:%d - AvgSpeed:%.2fMB/s - MaxSpeed:%.2fMB/s" % (
@@ -511,11 +520,12 @@ if (__name__ == "__main__"):
 			except Exception:
 				client.stopClient()
 				logger.exception("")
-			if (pfInfo == "Windows"):
-				if (not client.nextWinConf()):
-					break
-				time.sleep(1)
-			else:
+		#	if (pfInfo == "Windows"):
+		#		if (not client.nextWinConf()):
+		#			break
+		#		time.sleep(1)
+		#	else:
+			if (True):
 				client.stopClient()
 				if (retryMode):
 					if (retryConfig != []):
@@ -569,10 +579,10 @@ if (__name__ == "__main__"):
 	Result = sortResult(Result,SORT_METHOD)
 	export(Result,SPLIT_CNT,2,RESULT_IMAGE_COLOR)
 	time.sleep(1)
-	if(checkPlatform() == "Windows"):
-		if (input("Do you want to turn off client ? (Y/N)").lower() == "y"):
-			client.stopClient()
-		else:
-			logger.info("Please manually turn off client.")
+	#if(checkPlatform() == "Windows"):
+	#	if (input("Do you want to turn off client ? (Y/N)").lower() == "y"):
+	#		client.stopClient()
+	#	else:
+	#		logger.info("Please manually turn off client.")
 
 

@@ -17,6 +17,33 @@ from SSRSpeed.Shadowsocks.ClientBase import Base
 class ShadowsocksR(Base):
 	def __init__(self):
 		super(ShadowsocksR,self).__init__()
+
+	def startClient(self,config = {}):
+		self._config = config
+	#	self._config["server_port"] = int(self._config["server_port"])
+		with open("./config.json","w+",encoding="utf-8") as f:
+			f.write(json.dumps(self._config))
+			f.close()
+		if (self._process == None):
+			if (self._checkPlatform() == "Windows"):
+				if (logger.level == logging.DEBUG):
+					self._process = subprocess.Popen(["./clients/shadowsocksr-libev/ssr-local.exe","-c","{}/config.json".format(os.getcwd()),"-v"])
+				else:
+					self._process = subprocess.Popen(["./clients/shadowsocksr-libev/ssr-local.exe","-c","{}/config.json".format(os.getcwd())],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+			elif(self._checkPlatform() == "Linux" or self._checkPlatform() == "MacOS"):
+				if (logger.level == logging.DEBUG):
+					self._process = subprocess.Popen(["python3","./clients/shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()])
+				else:
+					self._process = subprocess.Popen(["python3","./clients/shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+				logger.info("Starting ShadowsocksR-Python with server %s:%d" % (config["server"],config["server_port"]))
+			else:
+				logger.error("Your system does not supported.Please contact developer.")
+				sys.exit(1)
+		#	print(self.__process.returncode)
+
+class ShadowsocksRR(Base):
+	def __init__(self):
+		super(ShadowsocksRR,self).__init__()
 		self.__ssrAuth = ""
 
 	def __winConf(self):
@@ -26,6 +53,7 @@ class ShadowsocksR(Base):
 		self.__ssrAuth = tmpConf["localAuthPassword"]
 		tmpConf["token"]["SpeedTest"] = "SpeedTest"
 		tmpConf["localPort"] = self._localPort
+		tmpConf["sysProxyMode"] = 1
 		tmpConf["index"] = 0
 		tmpConf["proxyRuleMode"] = 2
 		tmpConf["configs"] = []
@@ -104,7 +132,7 @@ class ShadowsocksR(Base):
 			if (self._checkPlatform() == "Windows"):
 				self.__winConf()
 			#	sys.exit(0)
-				self._process = subprocess.Popen(["./clients/shadowsocksr-win/ShadowsocksR.exe"])
+				self._process = subprocess.Popen(["./clients/shadowsocksr-libev/ssr-local.exe"])
 			elif(self._checkPlatform() == "Linux" or self._checkPlatform() == "MacOS"):
 				self._config = config
 				self._config["server_port"] = int(self._config["server_port"])

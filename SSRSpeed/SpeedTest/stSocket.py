@@ -7,6 +7,7 @@ import requests
 import json
 import time
 import re
+import copy
 import logging
 
 logger = logging.getLogger("Sub")
@@ -227,7 +228,7 @@ def speedTestSocket(port):
 		logger.error("Socket Test Error !")
 		return(0,0)
 	restoreSocket()
-	rawSpeedList = maxSpeedList
+	rawSpeedList = copy.deepcopy(maxSpeedList)
 	maxSpeedList.sort()
 #	print (maxSpeedList)
 	if (len(maxSpeedList) > 12):

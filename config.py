@@ -8,6 +8,10 @@ config = {
 		"到期时间",
 		"过期时间"
 	],
+	"web":{
+		"listen":"127.0.0.1",
+		"port":10870
+	},
 	"exportResult":{
 		"hideMaxSpeed":True,
 		"uploadResult":False,
