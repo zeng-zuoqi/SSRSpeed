@@ -9,14 +9,22 @@ import platform
 from optparse import OptionParser
 import logging
 
-from shadowsocksR import SSRParse,SSR
-from speedTest import SpeedTest,setInfo
-from exportResult import ExportResult
-import importResult
-#from socks2http import ThreadingTCPServer,SocksProxy
-#from socks2http import setUpstreamPort
+from SSRSpeed.Shadowsocks.Shadowsocks import Shadowsocks as SSClient
+from SSRSpeed.Shadowsocks.ShadowsocksR import ShadowsocksR as SSRClient
+from SSRSpeed.SpeedTest.speedTest import SpeedTest
+from SSRSpeed.Result.exportResult import ExportResult
+import SSRSpeed.Result.importResult as importResult
+from SSRSpeed.Utils.checkPlatform import checkPlatform
+from SSRSpeed.Utils.ConfigParser.ShadowsocksParser import ShadowsocksParser as SSParser
+from SSRSpeed.Utils.ConfigParser.ShadowsocksRParser import ShadowsocksRParser as SSRParser
+from SSRSpeed.Utils.checkRequirements import checkShadowsocks
 
 from config import config
+
+if (not os.path.exists("./logs/")):
+	os.mkdir("./logs/")
+if (not os.path.exists("./results/")):
+	os.mkdir("./results/")
 
 loggerList = []
 loggerSub = logging.getLogger("Sub")
@@ -25,15 +33,12 @@ loggerList.append(loggerSub)
 loggerList.append(logger)
 
 formatter = logging.Formatter("[%(asctime)s][%(levelname)s][%(thread)d][%(filename)s:%(lineno)d]%(message)s")
-fileHandler = logging.FileHandler(time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + ".log",encoding="utf-8")
+fileHandler = logging.FileHandler("./logs/" + time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + ".log",encoding="utf-8")
 fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-
-VERSION = "2.2 Stable"
-LOCAL_ADDRESS = "127.0.0.1"
-LOCAL_PORT = 1087
+VERSION = "2.2.4 beta 2.1"
 
 def setArgsListCallback(option,opt_str,value,parser):
 	assert value is None
@@ -137,6 +142,13 @@ def setOpts(parser):
 		help="Exclude nodes by remarks using keyword."
 		)
 	parser.add_option(
+		"-t","--type",
+		action="store",
+		dest="proxy_type",
+		default = "ssr",
+		help="Select proxy type in [ssr,ss],default ssr."
+		)
+	parser.add_option(
 		"-y","--yes",
 		action="store_true",
 		dest="confirmation",
@@ -144,11 +156,25 @@ def setOpts(parser):
 		help="Skip node list confirmation before test."
 		)
 	parser.add_option(
+		"-C","--color",
+		action="store",
+		dest="result_color",
+		default="",
+		help="Set the colors when exporting images.."
+		)
+	parser.add_option(
 		"-s","--split",
 		action="store",
 		dest="split_count",
 		default="-1",
 		help="Set the number of nodes displayed in a single image when exporting images."
+		)
+	parser.add_option(
+		"-S","--sort",
+		action="store",
+		dest="sort_method",
+		default="",
+		help="Select sort method in [speed,rspeed,ping,rping],default not sorted."
 		)
 	parser.add_option(
 		"-i","--import",
@@ -172,10 +198,12 @@ def setOpts(parser):
 		help="如题"
 		)
 
-def export(Result,split = 0,exportOnly = False):
+def export(Result,split = 0,exportType= 0,color="origin"):
 	er = ExportResult()
-	if (not exportOnly):
+	er.setColors(color)
+	if (not exportType):
 		er.exportAsJson(Result)
+		return
 	if (split > 0):
 		i = 0
 		id = 1
@@ -191,18 +219,25 @@ def export(Result,split = 0,exportOnly = False):
 	else:
 		er.exportAsPng(Result)
 
+def sortBySpeed(result):
+	return result["dspeed"]
 
-def checkPlatform():
-		tmp = platform.platform()
-		if ("Windows" in tmp):
-			return "Windows"
-		elif("Linux" in tmp):
-			return "Linux"
-		else:
-			return "Unknown"
+def sortByPing(result):
+	return result["ping"]
+
+def sortResult(result,sortMethod):
+	if (sortMethod != ""):
+		if (sortMethod == "SPEED"):
+			result.sort(key=sortBySpeed,reverse=True)
+		elif(sortMethod == "REVERSE_SPEED"):
+			result.sort(key=sortBySpeed)
+		elif(sortMethod == "PING"):
+			result.sort(key=sortByPing)
+		elif(sortMethod == "REVERSE_PING"):
+			result.sort(key=sortByPing,reverse=True)
+	return result
 
 if (__name__ == "__main__"):
-	#setUpstreamPort(LOCAL_PORT)
 
 	DEBUG = False
 	CONFIG_LOAD_MODE = 0 #0 for import result,1 for guiconfig,2 for subscription url
@@ -217,8 +252,11 @@ if (__name__ == "__main__"):
 	EXCLUDE_REMARK_KEWORD = []
 	TEST_METHOD = ""
 	TEST_MODE = ""
+	PROXY_TYPE = "SSR"
 	SPLIT_CNT = 0
+	SORT_METHOD = ""
 	SKIP_COMFIRMATION = False
+	RESULT_IMAGE_COLOR = "origin"
 
 	parser = OptionParser(usage="Usage: %prog [options] arg1 arg2...",version="SSR Speed Tool " + VERSION)
 	setOpts(parser)
@@ -236,6 +274,13 @@ if (__name__ == "__main__"):
 					os.remove(os.path.join(root, name))
 				except:
 					pass
+		sys.exit(0)
+
+	print("****** Import Hint 重要提示******")
+	print("Before you publicly release your speed test results, be sure to ask the node owner if they agree to the release to avoid unnecessary disputes.")
+	print("在您公开发布测速结果之前请务必征得节点拥有者的同意,以避免一些令人烦恼的事情")
+	print("*********************************")
+	input("Press ENTER to conitnue or Crtl+C to exit.")
 
 	if (options.debug):
 		DEBUG = options.debug
@@ -251,6 +296,16 @@ if (__name__ == "__main__"):
 
 	if (logger.level == logging.DEBUG):
 		logger.debug("Program running in debug mode")
+
+	if (options.proxy_type):
+		if (options.proxy_type.lower() == "ss"):
+			PROXY_TYPE = "SS"
+			if (checkPlatform() != "Windows" and not checkShadowsocks()):
+				sys.exit(1)
+		elif (options.proxy_type.lower() == "ssr"):
+			PROXY_TYPE = "SSR"
+		else:
+			logger.warn("Unknown proxy type {} ,using default ssr.".format(options.proxy_type))
 
 	#print(options.test_method)
 	if (options.test_method == "speedtestnet"):
@@ -275,6 +330,9 @@ if (__name__ == "__main__"):
 	if (len(sys.argv) == 1):
 		parser.print_help()
 		exit(0)
+	
+	if (options.result_color):
+		RESULT_IMAGE_COLOR = options.result_color
 
 	if (options.import_file):
 		CONFIG_LOAD_MODE = 0
@@ -312,25 +370,43 @@ if (__name__ == "__main__"):
 
 	if (int(options.split_count) > 0):
 		SPLIT_CNT = int(options.split_count)
+	
+	if (options.sort_method):
+		sm = options.sort_method
+	#	print(sm)
+		if (sm == "speed"):
+			SORT_METHOD = "SPEED"
+		elif(sm == "rspeed"):
+			SORT_METHOD = "REVERSE_SPEED"
+		elif(sm == "ping"):
+			SORT_METHOD = "PING"
+		elif(sm == "rping"):
+			SORT_METHOD = "REVERSE_PING"
+		else:
+			logger.error("Sort method %s not support." % sm)
 
 	if (options.import_file and CONFIG_LOAD_MODE == 0):
 		IMPORT_FILENAME = options.import_file
-		export(importResult.importResult(IMPORT_FILENAME),SPLIT_CNT,True)
+		export(sortResult(importResult.importResult(IMPORT_FILENAME),SORT_METHOD),SPLIT_CNT,2,RESULT_IMAGE_COLOR)
 		sys.exit(0)
-#	exit(0)
 
-	#socks2httpServer = ThreadingTCPServer((LOCAL_ADDRESS,FAST_PORT),SocksProxy)
-	#_thread.start_new_thread(socks2httpServer.serve_forever,())
-	#print("socks2http server started.")
-	ssrp = SSRParse()
+	if (PROXY_TYPE == "SSR"):
+		client = SSRClient()
+		uConfigParser = SSRParser()
+	elif(PROXY_TYPE == "SS"):
+		client = SSClient()
+		uConfigParser = SSParser()
+
 	if (CONFIG_LOAD_MODE == 1):
-		ssrp.readGuiConfig(CONFIG_FILENAME)
+		uConfigParser.readGuiConfig(CONFIG_FILENAME)
 	else:
-		ssrp.readSubscriptionConfig(CONFIG_URL)
-	ssrp.excludeNode([],[],config["excludeRemarks"])
-	ssrp.filterNode(FILTER_KEYWORD,FILTER_GROUP_KRYWORD,FILTER_REMARK_KEYWORD)
-	ssrp.excludeNode(EXCLUDE_KEYWORD,EXCLUDE_GROUP_KEYWORD,EXCLUDE_REMARK_KEWORD)
-	ssrp.printNode()
+		uConfigParser.readSubscriptionConfig(CONFIG_URL)
+	uConfigParser.excludeNode([],[],config["excludeRemarks"])
+	uConfigParser.filterNode(FILTER_KEYWORD,FILTER_GROUP_KRYWORD,FILTER_REMARK_KEYWORD)
+	uConfigParser.excludeNode(EXCLUDE_KEYWORD,EXCLUDE_GROUP_KEYWORD,EXCLUDE_REMARK_KEWORD)
+	uConfigParser.printNode()
+	logger.info("{} node(s) will be test.".format(len(uConfigParser.getAllConfig())))
+
 	if (not SKIP_COMFIRMATION):
 		if (TEST_MODE == "TCP_PING"):
 			logger.info("Test mode : tcp ping only.")
@@ -361,26 +437,33 @@ if (__name__ == "__main__"):
 	totalConfCount = 0
 	curConfCount = 0
 
-	ssr = SSR()
+	pfInfo = checkPlatform()
 
-	if (checkPlatform() == "Windows" and TEST_MODE == "ALL"):
-		configs = ssrp.getAllConfig()
+	if (pfInfo == "Unknown"):
+		logger.critical("Your system does not supported.Please contact developer.")
+		sys.exit(1)
+
+	if (TEST_MODE == "ALL"):
+		configs = uConfigParser.getAllConfig()
 		totalConfCount = len(configs)
-		ssr.addConfig(configs)
-		ssr.startSsr()
-		setInfo(LOCAL_ADDRESS,LOCAL_PORT)
+		if (pfInfo == "Windows"):
+		#	config = client.getCurrrentConfig()
+			client.addConfig(configs)
+			client.startClient()
+		else:
+			config = uConfigParser.getNextConfig()
+		time.sleep(2)
 		while(True):
-			time.sleep(1)
-			config = ssr.getCurrrentConfig()
-			curConfCount += 1
-			if (not config):
-				logger.error("Get current config failed.")
-				time.sleep(2)
-				continue
+			if (pfInfo == "Windows"):
+				config = client.getCurrrentConfig()
 			_item = {}
-			_item["group"] = config["group"]
-			_item["remarks"] = config["remarks"]
-			logger.info("Starting test for %s - %s [%d/%d]" % (config["group"],config["remarks"],curConfCount,totalConfCount))
+			_item["group"] = config.get("group","Group NULL")
+			_item["remarks"] = config.get("remarks","Remark NULL")
+			config["server_port"] = int(config["server_port"])
+			if (pfInfo != "Windows"):
+				client.startClient(config)
+			curConfCount += 1
+			logger.info("Starting test for %s - %s [%d/%d]" % (_item["group"],_item["remarks"],curConfCount,totalConfCount))
 			time.sleep(1)
 			try:
 				st = SpeedTest()
@@ -393,68 +476,28 @@ if (__name__ == "__main__"):
 						testRes = st.startTest(TEST_METHOD)
 					_item["dspeed"] = testRes[0]
 					_item["maxDSpeed"] = testRes[1]
+					_item["rawSocketSpeed"] = []
+					try:
+						_item["rawSocketSpeed"] = testRes[2]
+					except:
+						pass
 					time.sleep(1)
 				else:
 					_item["dspeed"] = 0
 					_item["maxDSpeed"] = 0
-				_item["loss"] = 1 - latencyTest[1]
-				_item["ping"] = latencyTest[0]
-				logger.info(
-					"%s - %s - Loss:%s%% - TCP_Ping:%d - AvgSpeed:%.2fMB/s - MaxSpeed:%.2fMB/s" % (
-						_item["group"],
-						_item["remarks"],
-						_item["loss"] * 100,
-						int(_item["ping"] * 1000),
-						_item["dspeed"] / 1024 / 1024,
-						_item["maxDSpeed"] / 1024 / 1024
-						)
-					)
-				Result.append(_item)
-			except:
-				logger.exception("")
-				ssr.stopSsr()
-			if (not ssr.nextWinConf()):
-				break
-			time.sleep(1)
-	elif(checkPlatform() == "Linux" and TEST_MODE == "ALL"):
-		totalConfCount = len(ssrp.getAllConfig())
-		config = ssrp.getNextConfig()
-		while(True):
-			setInfo(LOCAL_ADDRESS,LOCAL_PORT)
-			_item = {}
-			_item["group"] = config["group"]
-			_item["remarks"] = config["remarks"]
-			config["local_port"] = LOCAL_PORT
-			config["server_port"] = int(config["server_port"])
-			ssr.startSsr(config)
-			curConfCount += 1
-			logger.info("Starting test for %s - %s [%d/%d]" % (config["group"],config["remarks"],curConfCount,totalConfCount))
-			time.sleep(1)
-			try:
-				st = SpeedTest()
-				latencyTest = st.tcpPing(config["server"],config["server_port"])
-				if (int(latencyTest[0] * 1000) != 0):
-					time.sleep(1)
-					testRes = st.startTest(TEST_METHOD)
-					_item["dspeed"] = testRes[0]
-					_item["maxDSpeed"] = testRes[1]
-					time.sleep(1)
-				else:
-					_item["dspeed"] = 0
-					_item["maxDSpeed"] = 0
-				ssr.stopSsr()
+					_item["rawSocketSpeed"] = []
+				if (pfInfo != "Windows"):
+					client.stopClient()
 				time.sleep(1)
-			#	.print (latencyTest)
 				_item["loss"] = 1 - latencyTest[1]
 				_item["ping"] = latencyTest[0]
 			#	_item["gping"] = st.googlePing()
 				_item["gping"] = 0
-				if ((int(_item["dspeed"]) == 0) and (int(latencyTest[0] * 1000) != 0) and (retryMode == False)):
-					retryList.append(_item)
-					Result.append(_item)
-					retryConfig.append(config)
-				else:
-					Result.append(_item)
+				if (pfInfo != "Windows"):
+					if ((int(_item["dspeed"]) == 0) and (int(latencyTest[0] * 1000) != 0) and (retryMode == False)):
+						retryList.append(_item)
+						retryConfig.append(config)
+				Result.append(_item)
 				logger.info(
 					"%s - %s - Loss:%s%% - TCP_Ping:%d - AvgSpeed:%.2fMB/s - MaxSpeed:%.2fMB/s" % (
 						_item["group"],
@@ -465,49 +508,48 @@ if (__name__ == "__main__"):
 						_item["maxDSpeed"] / 1024 / 1024
 						)
 					)
-				#socks2httpServer.shutdown()
-				#logger.debug("Socks2HTTP Server already shutdown.")
 			except Exception:
-				ssr.stopSsr()
-				#socks2httpServer.shutdown()
-				#logger.debug("Socks2HTTP Server already shutdown.")
-				#traceback.print_exc()
+				client.stopClient()
 				logger.exception("")
-				sys.exit(1)
-			ssr.stopSsr()
-			if (retryMode):
-				if (retryConfig != []):
-					config = retryConfig.pop(0)
-				else:
-					config = None
+			if (pfInfo == "Windows"):
+				if (not client.nextWinConf()):
+					break
+				time.sleep(1)
 			else:
-				config = ssrp.getNextConfig()
-
-			if (config == None):
-				if ((retryMode == True) or (retryList == [])):
-					break
-				ans = str(input("%d node(s) got 0kb/s,do you want to re-test these node? (Y/N)" % len(retryList))).lower()
-				if (ans == "y"):
-				#	logger.debug(retryConfig)
-					curConfCount = 0
-					totalConfCount = len(retryConfig)
-					retryMode = True
-					config = retryConfig.pop(0)
-				#	logger.debug(config)
-					continue
+				client.stopClient()
+				if (retryMode):
+					if (retryConfig != []):
+						config = retryConfig.pop(0)
+					else:
+						config = None
 				else:
-					for r in retryList:
-						for s in range(0,len(Result)):
-							if (r["remarks"] == Result[s]["remarks"]):
-								Result[s]["dspeed"] = r["dspeed"]
-								Result[s]["maxDSpeed"] = r["maxDSpeed"]
-								Result[s]["ping"] = r["ping"]
-								Result[s]["loss"] = r["loss"]
-								break
-					break
+					config = uConfigParser.getNextConfig()
+
+				if (config == None):
+					if ((retryMode == True) or (retryList == [])):
+						break
+					ans = str(input("%d node(s) got 0kb/s,do you want to re-test these node? (Y/N)" % len(retryList))).lower()
+					if (ans == "y"):
+					#	logger.debug(retryConfig)
+						curConfCount = 0
+						totalConfCount = len(retryConfig)
+						retryMode = True
+						config = retryConfig.pop(0)
+					#	logger.debug(config)
+						continue
+					else:
+						for r in retryList:
+							for s in range(0,len(Result)):
+								if (r["remarks"] == Result[s]["remarks"]):
+									Result[s]["dspeed"] = r["dspeed"]
+									Result[s]["maxDSpeed"] = r["maxDSpeed"]
+									Result[s]["ping"] = r["ping"]
+									Result[s]["loss"] = r["loss"]
+									break
+						break
 	
 	if (TEST_MODE == "TCP_PING"):
-		config = ssrp.getNextConfig()
+		config = uConfigParser.getNextConfig()
 		while (True):
 			_item = {}
 			_item["group"] = config["group"]
@@ -521,15 +563,16 @@ if (__name__ == "__main__"):
 			_item["maxDSpeed"] = -1
 			Result.append(_item)
 			logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000)))
-			config = ssrp.getNextConfig()
+			config = uConfigParser.getNextConfig()
 			if (config == None):break
-
-	export(Result,SPLIT_CNT)
+	export(Result)
+	Result = sortResult(Result,SORT_METHOD)
+	export(Result,SPLIT_CNT,2,RESULT_IMAGE_COLOR)
 	time.sleep(1)
 	if(checkPlatform() == "Windows"):
-		if (input("Do you want to turn off SSR-Win ? (Y/N)").lower() == "y"):
-			ssr.stopSsr()
+		if (input("Do you want to turn off client ? (Y/N)").lower() == "y"):
+			client.stopClient()
 		else:
-			logger.info("Please manually turn off SSR-Win.")
+			logger.info("Please manually turn off client.")
 
 

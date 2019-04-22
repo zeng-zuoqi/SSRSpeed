@@ -1,66 +1,58 @@
 
-# SSRSpeed
-
-ShadowsocksR Batch Speed Tool
-
   
+<h1 align="center">
+    <br>SSRSpeed
+</h1>
+<p align="center">
+Batch speed measuring tool based on Shadowsocks(R)
+</p>
+<p align="center">
+   <img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/tag/NyanChanMeow/SSRSpeed.svg">
+    <img alt="GitHub release" src="https://img.shields.io/github/release/NyanChanMeow/SSRSpeed.svg">
+    <img src="https://img.shields.io/github/license/NyanChanMeow/SSRSpeed.svg">
+</p>
 
-中文文档请查看 [Readme_ZH_CN](https://github.com/NyanChanMeow/SSRSpeed/blob/master/README_ZH_CN.md)
+<p></p>
 
-  
+## Links
+ - [中文文档](https://github.com/NyanChanMeow/SSRSpeed/blob/master/README_ZH_CN.md)
 
 ## Important Hint
 
- - For the copyright issue, the "msyh.ttc" font will not be provided in the repository. When using the Linux operating system, please extract the font to the root directory of the program to export the resulting image.
- - SpeedTestNet is no longer supported and will be removed soon.
+<font size=5 color=#FF0033>Before you publicly release your speed test results, be sure to ask the node owner if they agree to the release to avoid unnecessary disputes.</font>
 
-  
+ - SpeedTestNet is no longer supported.
 
 ## Features
 
-  
-
 - Support SpeedTestNet, Fast.com and socket download.
-
 - Support for exporting result as json and png.
-
-- Support batch import of SSR configuration from ShadowsocksR-CSharp configuration file and SSPanel-v2, v3 subscription link.
-
+- Support batch import of configuration from GUI configuration file and SSPanel-v2, v3 subscription link.
 - Support for importing data from any Json export file and re-exporting files of the specified format.
 
-  
+## Requirements 
 
-## Requirements
-
-  
-
+Universal dependency
 - Python >= 3.6
-
 - pillow
-
 - requests
-
 - pysocks
 
-  
+Linux dependency
+ - [libsodium](https://github.com/jedisct1/libsodium)
+ - [Shadowsocks-libev](https://github.com/shadowsocks/shadowsocks-libev)
+ - [Simple-Obfs](https://github.com/shadowsocks/simple-obfs)
 
 ## Platform Support
-
 1. Windows 10 x64
-
 2. Ubuntu 18.04 LTS
 
-  
-
 ## Getting started
-
 pip install -r requirements.txt
 or
 pip3 install -r requirements.txt
-  
 
     python .\main.py
-    
     Usage: main.py [options] arg1 arg2...
     
     Options:
@@ -79,45 +71,52 @@ pip3 install -r requirements.txt
       --exclude             Exclude nodes by group and remarks using keyword.
       --exclude-group       Exclude nodes by group using keyword.
       --exclude-remark      Exclude nodes by remarks using keyword.
+      -t PROXY_TYPE, --type=PROXY_TYPE
+                            Select proxy type in [ssr,ss],default ssr.
       -y, --yes             Skip node list confirmation before test.
+      -C RESULT_COLOR, --color=RESULT_COLOR
+                        Set the colors when exporting images..
       -s SPLIT_COUNT, --split=SPLIT_COUNT
                             Set the number of nodes displayed in a single image
                             when exporting images.
+      -S SORT_METHOD, --sort=SORT_METHOD
+                            Select sort method in
+                            [speed,rspeed,ping,rping],default not sorted.
       -i IMPORT_FILE, --import=IMPORT_FILE
                             Import test result from json file and export it.
       --debug               Run program in debug mode.
 
-  
 
 Example usage :
-
 - python main.py -c gui-config.json --include 韩国 --include-remark Azure --include-group MoCloudPlus
-
 - python main.py -u https://mocloudplus.com/link/ABCDEFG123456?mu=0 --include 香港 Azure --include-group MoCloudPlus --exclude HKT HKBN
-
-  
+- python main.py -u https://mocloudplus.com/link/ABCDEFG123456?mu=0 -t ss
 
 The parameter priority is as follows:
 
 > -i > -c > -u
-
 > The above sequence indicates that if the parameter has a higher priority, the parameter will be used first, and other parameters will be ignored.
-
 >
-
 > --include > --include-group > --include-remark
-
 > --exclude > --exclude-group > --exclude-remark
-
 > The above sequence indicates that node filtering will be performed in descending order of priority.
 
-  
+## Advanced Usage
+
+ - **Rules**
+	 - The program has a built-in rule matching mode that allows specific ISPs or nodes in specific regions to use specific speed sources through custom rules for "Socket" test mode.Rules need to be written in config.py. Please see config.py for more details.
+- **Custom color**
+   - Users can customize the color of the resulting image in config.py. See the config.py file for sample configuration.
 
 ## Developers
-- Initial version [@ranwen](https://github.com/ranwen)
+- [@ranwen](https://github.com/ranwen)
 
 ## Acknowledgement
-
--  [speedtest-cli](https://github.com/sivel/speedtest-cli)
-
--  [Fast.com-cli](https://github.com/nkgilley/fast.com)
+ - New color scheme
+   - Chunxiaoyi 纯小亦
+-  Bugs Report
+   - [Professional-V1](https://t.me/V1_BLOG)
+   -  [Julydate 七夏浅笑](https://www.julydate.com/)
+- This project uses the following open source projects
+   -  [speedtest-cli](https://github.com/sivel/speedtest-cli)
+   -  [Fast.com-cli](https://github.com/nkgilley/fast.com)

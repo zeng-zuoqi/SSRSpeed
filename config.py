@@ -1,13 +1,58 @@
 #coding:utf-8
 
 config = {
+	"localAddress":"127.0.0.1",
+	"localPort":1087,
 	"excludeRemarks":[
 		"剩余流量",
 		"到期时间",
 		"过期时间"
 	],
 	"exportResult":{
-		"hideMaxSpeed":True
+		"hideMaxSpeed":True,
+		"uploadResult":False,
+		"font":"./resources/fonts/SourceHanSansCN-Medium.otf",
+		"colors":[
+			{
+				"name":"origin",
+				"colors":{
+					"0.064":[128,255,0],
+					"0.512":[255,255,0],
+					"4.0":[255,128,192],
+					"16.0":[255,0,0]
+				}
+			},
+			{
+				"name":"chunxiaoyi",
+				"colors":{
+					"0.064":[102,255,102],
+					"0.512":[255,255,102],
+					"4.0":[255,178,102],
+					"16.0":[255,102,102],
+					"24.0":[226,140,255],
+					"32.0":[102,204,255],
+					"40.0":[102,102,255]
+				}
+			},
+			{
+				"name":"chunxiaoyi2",
+				"colors":{
+					"0.064":[153,255,153],
+					"1.0":[102,255,102],
+					"4.0":[255,228,191],
+					"8.0":[255,191,102],
+					"16.0":[255,140,140],
+					"24.0":[255,63,63],
+					"32.0":[255,0,0],
+					"40.0":[165,0,0]
+				}
+			}
+		]
+	},
+	"uploadResult":{
+		"apiToken":"",
+		"server":"",
+		"remark":"Example Remark."
 	},
 	"speedtestsocket":{
 		"maxThread":8,	#Thread count
@@ -28,7 +73,7 @@ config = {
 	#			"mode":"match_location",
 	#			"countries":[	#Country Code,for example: HK, US, JP etc.
 	#			],
-	#			"continent":"Europe",
+	#			"continent":"EU",
 	#			"tag":"Hetzner_DE"
 	#		},
 	#		{

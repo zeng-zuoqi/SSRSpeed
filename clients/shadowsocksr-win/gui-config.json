@@ -1,0 +1,43 @@
+{
+	"configs" : [
+		
+	],
+	"index" : 1,
+	"random" : false,
+	"sysProxyMode" : 3,
+	"shareOverLan" : false,
+	"localPort" : 1087,
+	"localAuthPassword" : "7gHcg0umEd7-Yyr5tiYc",
+	"localDnsServer" : "",
+	"dnsServer" : "",
+	"reconnectTimes" : 2,
+	"balanceAlgorithm" : "LowException",
+	"randomInGroup" : false,
+	"TTL" : 0,
+	"connectTimeout" : 5,
+	"proxyRuleMode" : 2,
+	"proxyEnable" : false,
+	"pacDirectGoProxy" : false,
+	"proxyType" : 0,
+	"proxyHost" : "",
+	"proxyPort" : 0,
+	"proxyAuthUser" : "",
+	"proxyAuthPass" : "",
+	"proxyUserAgent" : "",
+	"authUser" : "",
+	"authPass" : "",
+	"autoBan" : false,
+	"sameHostForSameTarget" : false,
+	"keepVisitTime" : 180,
+	"isHideTips" : false,
+	"nodeFeedAutoUpdate" : true,
+	"serverSubscribes" : [
+
+	],
+	"token" : {
+		"SpeedTest" : "SpeedTest"
+	},
+	"portMap" : {
+
+	}
+}
