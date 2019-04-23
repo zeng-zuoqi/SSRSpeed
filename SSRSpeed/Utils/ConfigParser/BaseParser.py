@@ -6,6 +6,7 @@ import platform
 import os
 import time
 import sys
+import copy
 import urllib.parse
 import logging
 logger = logging.getLogger("Sub")
@@ -22,35 +23,16 @@ TIMEOUT = 10
 class BaseParser(object):
 	def __init__(self):
 		self._configList = []
-		self._baseShadowsocksConfig = SSBaseConf.getConfig()
-		self._baseShadowsocksConfig["timeout"] = TIMEOUT
-		self._baseShadowsocksConfig["local_port"] = LOCAL_PORT
-		self._baseShadowsocksConfig["local_address"] = LOCAL_ADDRESS
-		self._baseV2RayConfig = {
-			"plusMsgs":{
-				"group":"N/A",
-				"remarks":""
-			},
-			"log":{
-				"loglevel":"error"
-			},
-			"inbounds": [
-				{
-					"listen":LOCAL_ADDRESS,
-					"port": LOCAL_PORT,
-					"protocol": "socks",
-					"settings": {
-						"auth": "noauth"
-					}
-				}
-			],
-			"outbounds": [
-				
-			]
-		}
+		self.__baseShadowsocksConfig = SSBaseConf.getConfig()
+		self.__baseShadowsocksConfig["timeout"] = TIMEOUT
+		self.__baseShadowsocksConfig["local_port"] = LOCAL_PORT
+		self.__baseShadowsocksConfig["local_address"] = LOCAL_ADDRESS
 
 	def _parseLink(self,link):
 		return {}
+	
+	def _getShadowsocksBaseConfig(self):
+		return copy.deepcopy(self.__baseShadowsocksConfig)
 
 	def __checkInList(self,item,_list):
 		for _item in _list:

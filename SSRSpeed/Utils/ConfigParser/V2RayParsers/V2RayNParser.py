@@ -1,18 +1,14 @@
 #coding:utf-8
 
-import urllib.parse
 import logging
 import json
-import copy
 logger = logging.getLogger("Sub")
 
-from SSRSpeed.Utils.ConfigParser.BaseParser import BaseParser
-import SSRSpeed.Utils.ConfigParser.BaseConfig.V2RayBaseConfig as V2RayConfig
 import SSRSpeed.Utils.b64plus as b64plus
 
 class ParserV2RayN(object):
 	def __init__(self):
-		self.__baseV2RayConfig = V2RayConfig.getConfig()
+		pass
 
 	def parseConfig(self,rawLink):
 		link = rawLink[8:]
@@ -22,15 +18,24 @@ class ParserV2RayN(object):
 		except json.JSONDecodeError:
 			return None
 		try:
+			cfgVersion = _conf.get("v","1")
 			server = _conf["add"]
 			port = int(_conf["port"])
-			path = _conf.get("path","") #Websocket path, http path, quic encrypt key
 			_type = _conf.get("type","none") #Obfs type
 			uuid = _conf["id"]
 			aid = int(_conf["aid"])
 			net = _conf["net"]
-			host = _conf.get("host","") # http host,web socket host,h2 host,quic encrypt method
-			tls = _conf.get("tls","") #TLS
+			if (cfgVersion == "2"):
+				host = _conf.get("host","") # http host,web socket host,h2 host,quic encrypt method
+				path = _conf.get("path","") #Websocket path, http path, quic encrypt key
+			#V2RayN Version 1 Share Link Support
+			else:
+				try:
+					host = _conf.get("host",";").split(";")[0]
+					path = _conf.get("host",";").split(";")[1]
+				except IndexError:
+					pass
+			tls = _conf.get("tls","none") #TLS
 			security = _conf.get("security","auto")
 			remarks = _conf.get("ps",server)
 			logger.debug("Server : {},Port : {},Path : {},Type : {},UUID : {},AlterId : {},Network : {},Host : {},TLS : {},Remarks : {}".format(
@@ -60,9 +65,7 @@ class ParserV2RayN(object):
 			}
 			return _config
 		except:
-			logger.exception("Parse {} failed.".format(rawLink))
+			logger.exception("Parse {} failed.(V2RayN Method)".format(rawLink))
 			return None
 
-if (__name__ == "__main__"):
-	pa = ParserV2RayN()
 	
