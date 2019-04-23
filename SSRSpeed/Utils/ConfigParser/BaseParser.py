@@ -24,8 +24,8 @@ class BaseParser(object):
 		self._configList = []
 		self._baseShadowsocksConfig = SSBaseConf.getConfig()
 		self._baseShadowsocksConfig["timeout"] = TIMEOUT
-		self._baseShadowsocksConfig["localPort"] = LOCAL_PORT
-		self._baseShadowsocksConfig["localAddress"] = LOCAL_ADDRESS
+		self._baseShadowsocksConfig["local_port"] = LOCAL_PORT
+		self._baseShadowsocksConfig["local_address"] = LOCAL_ADDRESS
 		self._baseV2RayConfig = {
 			"plusMsgs":{
 				"group":"N/A",
