@@ -2,7 +2,7 @@
 
 import urllib.parse
 import logging
-import copy
+import json
 logger = logging.getLogger("Sub")
 
 from SSRSpeed.Utils.ConfigParser.BaseParser import BaseParser
@@ -17,6 +17,10 @@ class V2RayParser(BaseParser):
 
 	def __generateConfig(self,config):
 		_config = V2RayConfig.getConfig()
+
+		_config["inbounds"][0]["listen"] = self._getLocalConfig()[0]
+		_config["inbounds"][0]["port"] = self._getLocalConfig()[1]
+
 		#Common
 		_config["remarks"] = config["remarks"]
 		_config["group"] = config.get("group","N/A")
@@ -52,7 +56,7 @@ class V2RayParser(BaseParser):
 		streamSettings["security"] = config["tls"]
 		if (config["tls"] == "tls"):
 			tlsSettings = V2RayConfig.getTlsSettingsObject()
-		#	tlsSettings["allowInsecure"] = False
+			tlsSettings["allowInsecure"] = True if (config.get("allowInsecure","false") == "true") else False
 			tlsSettings["serverName"] = config["host"]
 			streamSettings["tlsSettings"] = tlsSettings
 
@@ -83,7 +87,35 @@ class V2RayParser(BaseParser):
 		return self.__generateConfig(cfg)
 	
 	def readGuiConfig(self,filename):
-		logger.critical("V2RayN configuration file will be support soon.")
+		with open(filename,"r",encoding="utf-8") as f:
+			config = json.load(f)
+			f.close()
+		subList = config.get("subItem",[])
+		for item in config["vmess"]:
+			_dict = {
+				"server":item["address"],
+				"server_port":item["port"],
+				"id":item["id"],
+				"alterId":item["alterId"],
+				"security":item.get("security","auto"),
+				"type":item.get("headerType","none"),
+				"path":item.get("path",""),
+				"network":item["network"],
+				"host":item.get("requestHost",""),
+				"tls":item.get("streamSecurity",""),
+				"allowInsecure":item.get("allowInsecure",""),
+				"subId":item.get("subid",""),
+				"remarks":item.get("remarks",item["address"]),
+				"group":"N/A"
+			}
+			subId = _dict["subId"]
+			if (subId != ""):
+				for sub in subList:
+					if (subId == sub.get("id","")):
+						_dict["group"] = sub.get("remarks","N/A")
+			self._configList.append(self.__generateConfig(_dict))
+		logger.info("Read %d node(s)" % len(self._configList))
+	#	logger.critical("V2RayN configuration file will be support soon.")
 		
 
 

@@ -30,6 +30,9 @@ class BaseParser(object):
 
 	def _parseLink(self,link):
 		return {}
+
+	def _getLocalConfig(self):
+		return (LOCAL_ADDRESS,LOCAL_PORT)
 	
 	def _getShadowsocksBaseConfig(self):
 		return copy.deepcopy(self.__baseShadowsocksConfig)
