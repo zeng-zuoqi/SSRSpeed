@@ -59,7 +59,7 @@ config = {
 		"remark":"Example Remark."
 	},
 	"speedtestsocket":{
-		"maxThread":8,	#Thread count
+		"maxThread":4,	#Thread count
 		"buffer":4096,	#Buffer size,bytes
 		"skipRuleMatch":False,
 		"rules":[

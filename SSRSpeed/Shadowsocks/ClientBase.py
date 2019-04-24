@@ -25,15 +25,20 @@ class Base(object):
 	def _checkPlatform(self):
 		return checkPlatform()
 
+	def _beforeStopClient(self):
+		pass
+
 	def startClient(self,config={}):
 		pass
 
 	def stopClient(self):
+		self._beforeStopClient()
 		if(self._process != None):
 			if (self._checkPlatform() == "Windows"):
 				self._process.terminate()
+			#	self._process.send_signal(signal.SIGINT)
 			else:
-				self._process.send_signal(signal.SIGQUIT)
+			#	self._process.send_signal(signal.SIGQUIT)
 				self._process.send_signal(signal.SIGINT)
 	#		print (self.__process.returncode)
 			self._process = None

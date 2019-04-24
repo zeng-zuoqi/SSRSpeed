@@ -17,6 +17,27 @@ from SSRSpeed.Shadowsocks.ClientBase import Base
 class ShadowsocksR(Base):
 	def __init__(self):
 		super(ShadowsocksR,self).__init__()
+		self.useSsrCSharp = False
+
+	def _beforeStopClient(self):
+		if (self.useSsrCSharp):
+			self.__ssrCSharpConf({})
+	
+	def __ssrCSharpConf(self,config):
+		with open("./clients/shadowsocksr-win/gui-config.json","r+",encoding="utf-8") as f:
+			tmpConf = json.loads(f.read())
+			f.close()
+		tmpConf["localPort"] = self._localPort
+		tmpConf["sysProxyMode"] = 1
+		tmpConf["index"] = 0
+		tmpConf["proxyRuleMode"] = 0
+		tmpConf["configs"] = []
+		config["protocolparam"] = config.get("protocol_param","")
+		config["obfsparam"] = config.get("obfs_param","")
+		tmpConf["configs"].append(config)
+		with open("./clients/shadowsocksr-win/gui-config.json","w+",encoding="utf-8") as f:
+			f.write(json.dumps(tmpConf))
+			f.close()
 
 	def startClient(self,config = {}):
 		self._config = config
@@ -26,14 +47,20 @@ class ShadowsocksR(Base):
 			f.close()
 		if (self._process == None):
 			if (self._checkPlatform() == "Windows"):
+				if (self.useSsrCSharp):
+					self.__ssrCSharpConf(config)
+					self._process = subprocess.Popen(["./clients/shadowsocksr-win/shadowsocksr.exe"])
+					logger.info("ShadowsocksR-C# started.")
+					return
 				if (logger.level == logging.DEBUG):
 					self._process = subprocess.Popen(["./clients/shadowsocksr-libev/ssr-local.exe","-c","{}/config.json".format(os.getcwd()),"-v"])
+					logger.info("Starting ShadowsocksR-libev with server %s:%d" % (config["server"],config["server_port"]))
 				else:
 					self._process = subprocess.Popen(["./clients/shadowsocksr-libev/ssr-local.exe","-c","{}/config.json".format(os.getcwd())],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-				logger.info("Starting ShadowsocksR-libev with server %s:%d" % (config["server"],config["server_port"]))
+					logger.info("Starting ShadowsocksR-libev with server %s:%d" % (config["server"],config["server_port"]))
 			elif(self._checkPlatform() == "Linux" or self._checkPlatform() == "MacOS"):
 				if (logger.level == logging.DEBUG):
-					self._process = subprocess.Popen(["python3","./clients/shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()])
+					self._process = subprocess.Popen(["python3","./clients/shadowsocksr/shadowsocks/local.py","-v","-c","%s/config.json" % os.getcwd()])
 				else:
 					self._process = subprocess.Popen(["python3","./clients/shadowsocksr/shadowsocks/local.py","-c","%s/config.json" % os.getcwd()],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 				logger.info("Starting ShadowsocksR-Python with server %s:%d" % (config["server"],config["server_port"]))

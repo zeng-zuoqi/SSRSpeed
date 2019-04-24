@@ -1,7 +1,6 @@
 #coding:utf-8
 
 import time
-import traceback
 import sys
 import os
 import json
@@ -41,7 +40,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.2.4-beta4.1"
+VERSION = "2.2.5-alpha"
 
 def setArgsListCallback(option,opt_str,value,parser):
 	assert value is None
@@ -149,7 +148,7 @@ def setOpts(parser):
 		action="store",
 		dest="proxy_type",
 		default = "ssr",
-		help="Select proxy type in [ssr,ss,v2ray],default ssr."
+		help="Select proxy type in [ssr,ssr-cs,ss,v2ray],default ssr."
 		)
 	parser.add_option(
 		"-y","--yes",
@@ -307,6 +306,8 @@ if (__name__ == "__main__"):
 				sys.exit(1)
 		elif (options.proxy_type.lower() == "ssr"):
 			PROXY_TYPE = "SSR"
+		elif (options.proxy_type.lower() == "ssr-cs"):
+			PROXY_TYPE = "SSR-C#"
 		elif (options.proxy_type.lower() == "v2ray"):
 			PROXY_TYPE = "V2RAY"
 		else:
@@ -397,6 +398,10 @@ if (__name__ == "__main__"):
 
 	if (PROXY_TYPE == "SSR"):
 		client = SSRClient()
+		uConfigParser = SSRParser()
+	elif (PROXY_TYPE == "SSR-C#"):
+		client = SSRClient()
+		client.useSsrCSharp = True
 		uConfigParser = SSRParser()
 	elif(PROXY_TYPE == "SS"):
 		client = SSClient()
