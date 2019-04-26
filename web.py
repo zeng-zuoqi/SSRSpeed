@@ -8,7 +8,7 @@ import threading
 import urllib.parse
 import logging
 
-from flask import Flask,request
+from flask import Flask,request,render_template
 
 from SSRSpeed.Utils.checkRequirements import checkShadowsocks
 from SSRSpeed.Utils.checkPlatform import checkPlatform
@@ -23,7 +23,7 @@ import SSRSpeed.Result.importResult as importResult
 
 from config import config
 
-WEB_API_VERSION = "0.0.3-alpha"
+WEB_API_VERSION = "0.1.1-alpha"
 
 if (not os.path.exists("./logs/")):
 	os.mkdir("./logs/")
@@ -42,13 +42,21 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-app = Flask(__name__)
+TEMPLATE_FOLDER = "./resources/webui/templates"
+STATIC_FOLDER = "./resources/webui/static"
+
+app = Flask(__name__,
+	template_folder=TEMPLATE_FOLDER,
+	static_folder=STATIC_FOLDER,
+	static_url_path=""
+	)
 sc = None
 
-@app.route("/",methods=["POST"])
+@app.route("/",methods=["GET"])
 def index():
-	#print(getPostData())
-	return "SUCCESS"
+	return render_template(
+		"index.html"
+		)
 
 '''
 	{
@@ -66,6 +74,10 @@ def index():
 		"excludeRemark":[]
 	}
 '''
+
+@app.route("/status",methods=["GET"])
+def status():
+	sc.getWebStatus()
 
 @app.route('/start',methods=["POST"])
 def startTest():
