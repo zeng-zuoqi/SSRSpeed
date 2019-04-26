@@ -40,7 +40,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.2.5-alpha"
+VERSION = "2.3.0-alpha"
 
 def setArgsListCallback(option,opt_str,value,parser):
 	assert value is None
@@ -264,6 +264,10 @@ if (__name__ == "__main__"):
 	setOpts(parser)
 	(options,args) = parser.parse_args()
 
+	if (len(sys.argv) == 1):
+		parser.print_help()
+		sys.exit(0)
+
 	if (options.paolu):
 		for root, dirs, files in os.walk(".", topdown=False):
 			for name in files:
@@ -326,16 +330,12 @@ if (__name__ == "__main__"):
 	elif(options.test_mode == "all"):
 		TEST_MODE = "ALL"
 	else:
-		logger.error("Invalid test mode : %s" % options.test_mode)
+		logger.critical("Invalid test mode : %s" % options.test_mode)
 		sys.exit(1)
 	
 
 	if (options.confirmation):
 		SKIP_COMFIRMATION = options.confirmation
-
-	if (len(sys.argv) == 1):
-		parser.print_help()
-		exit(0)
 	
 	if (options.result_color):
 		RESULT_IMAGE_COLOR = options.result_color
@@ -422,13 +422,10 @@ if (__name__ == "__main__"):
 
 	if (TEST_MODE == "TCP_PING"):
 		logger.info("Test mode : tcp ping only.")
-	#	print("Your test mode is tcp ping only.")
 	else:
 		logger.info("Test mode : speed and tcp ping.\nTest method : %s." % TEST_METHOD)
-	#	print("Your test mode : speed and tcp ping.\nTest method : %s." % TEST_METHOD)
 
 	if (not SKIP_COMFIRMATION):
-		
 		ans = input("Before the test please confirm the nodes,Ctrl-C to exit. (Y/N)")
 		if (ans == "Y"):
 			pass
@@ -464,6 +461,8 @@ if (__name__ == "__main__"):
 		config = uConfigParser.getNextConfig()
 		time.sleep(2)
 		while(True):
+			if(not config):
+				break
 			_item = {}
 			_item["group"] = config.get("group","N/A")
 			_item["remarks"] = config.get("remarks",config["server"])
@@ -553,6 +552,8 @@ if (__name__ == "__main__"):
 	if (TEST_MODE == "TCP_PING"):
 		config = uConfigParser.getNextConfig()
 		while (True):
+			if(not config):
+				break
 			_item = {}
 			_item["group"] = config["group"]
 			_item["remarks"] = config["remarks"]

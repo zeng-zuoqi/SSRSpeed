@@ -10,7 +10,8 @@ config = {
 	],
 	"web":{
 		"listen":"127.0.0.1",
-		"port":10870
+		"port":10870,
+		"token":""
 	},
 	"exportResult":{
 		"hideMaxSpeed":True,
