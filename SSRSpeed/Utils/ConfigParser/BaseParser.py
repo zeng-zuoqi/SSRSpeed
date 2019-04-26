@@ -28,6 +28,9 @@ class BaseParser(object):
 		self.__baseShadowsocksConfig["local_port"] = LOCAL_PORT
 		self.__baseShadowsocksConfig["local_address"] = LOCAL_ADDRESS
 
+	def cleanConfigs(self):
+		self._configList = []
+
 	def _parseLink(self,link):
 		return {}
 
