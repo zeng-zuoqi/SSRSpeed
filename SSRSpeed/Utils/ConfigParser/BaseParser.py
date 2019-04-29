@@ -30,6 +30,10 @@ class BaseParser(object):
 
 	def cleanConfigs(self):
 		self._configList = []
+	
+	def addConfigs(self,newConfigs):
+		for item in newConfigs:
+			self._configList.append(item)
 
 	def _parseLink(self,link):
 		return {}

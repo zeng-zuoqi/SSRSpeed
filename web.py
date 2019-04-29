@@ -9,6 +9,7 @@ import urllib.parse
 import logging
 
 from flask import Flask,request,render_template
+from flask_cors import CORS
 
 from SSRSpeed.Utils.checkRequirements import checkShadowsocks
 from SSRSpeed.Utils.checkPlatform import checkPlatform
@@ -23,7 +24,7 @@ import SSRSpeed.Result.importResult as importResult
 
 from config import config
 
-WEB_API_VERSION = "0.1.1-alpha"
+WEB_API_VERSION = "0.3.0-alpha"
 
 if (not os.path.exists("./logs/")):
 	os.mkdir("./logs/")
@@ -50,12 +51,13 @@ app = Flask(__name__,
 	static_folder=STATIC_FOLDER,
 	static_url_path=""
 	)
+CORS(app)
 sc = None
 
 @app.route("/",methods=["GET"])
 def index():
 	return render_template(
-		"index.html"
+		"web.html"
 		)
 
 '''
@@ -77,42 +79,55 @@ def index():
 
 @app.route("/status",methods=["GET"])
 def status():
-	sc.getWebStatus()
+	return sc.webGetStatus()
+
+@app.route("/readsubscriptions",methods=["POST"])
+def readSubscriptions():
+	if (request.method == "POST"):
+		data = getPostData()
+		if (sc.webGetStatus() == "running"):
+			return 'running'
+		subscriptionUrl = data.get("url","")
+		proxyType = data.get("proxyType","SSR")
+		if (not subscriptionUrl):
+			return "invalid url."
+		return json.dumps(sc.webReadSubscription(subscriptionUrl,proxyType))
+
+@app.route("/getcolors",methods=["GET"])
+def getColors():
+	return json.dumps(sc.webGetColors())
 
 @app.route('/start',methods=["POST"])
 def startTest():
 	if (request.method == "POST"):
 		data = getPostData()
 	#	return "SUCCESS"
-		if (json.loads(sc.getWebStatus()).get("status","stopped") == "running"):
+		if (sc.webGetStatus() == "running"):
 			return 'running'
-		sc.clean()
-		sc.proxyType =data.get("proxyType","SSR")
-		sc.testMethod =data.get("testMethod","SOCKET")
-		sc.subscriptionUrl =data.get("subscriptionUrl","")
-		if (sc.subscriptionUrl == ""):
-			return 'invalid subscription url.'
-		sc.colors =data.get("colors","origin")
-		sc.sortMethod =data.get("sortMethod",""),
-		sc.setup()
-		sc.filterNodes(
-			data.get("include",[]),
-			data.get("includeGroup",[]),
-			data.get("includeRemark",[]),
-			data.get("exclude",[]),
-			data.get("excludeGroup",[]),
-			data.get("excludeRemark",[])
+		configs = data.get("configs",[])
+		if (not configs):
+			return "No configs"
+		sc.cleanResults()
+		sc.webSetConfigs(configs)
+		proxyType =data.get("proxyType","SSR")
+		testMethod =data.get("testMethod","SOCKET")
+		colors =data.get("colors","origin")
+		sortMethod =data.get("sortMethod","")
+		testMode = data.get("testMode","")
+		sc.webSetup(
+			testMode = testMode,
+			testMethod = testMethod,
+			colors = colors,
+			sortMethod = sortMethod,
+			proxyType = proxyType
 		)
-		if (data.get("testMode","") == "TCP_PING"):
-			sc.startTcpingOnlyTest()
-		else:
-			sc.startFullTest()
+		sc.startTest()
 		return 'done'
 	return 'invalid method'
 
 @app.route('/getresults')
 def getResults():
-	return sc.getWebStatus()
+	return json.dumps(sc.webGetResults())
 
 if (__name__ == "__main__"):
 	pfInfo = checkPlatform()

@@ -41,7 +41,7 @@ fileHandler.setFormatter(formatter)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-VERSION = "2.3.3-alpha"
+VERSION = "2.3.4-alpha"
 
 if (__name__ == "__main__"):
 	pfInfo = checkPlatform()

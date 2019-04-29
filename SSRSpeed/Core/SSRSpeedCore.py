@@ -35,6 +35,7 @@ class SSRSpeedCore(object):
 		self.webMode = False
 		self.colors = "origin"
 		self.sortMethod = ""
+		self.testMode = "TCP_PING"
 		self.subscriptionUrl = ""
 		self.configFile = ""
 		
@@ -44,25 +45,66 @@ class SSRSpeedCore(object):
 		self.__platformInfo = checkPlatform()
 		self.__results = []
 		self.__status = "stopped"
+	
+	def webGetColors(self):
+		return config["exportResult"]["colors"]
+	
+	def webGetStatus(self):
+		return self.__status
+	
+	def webReadSubscription(self,url,proxyType):
+		parser = self.__getParserByProxyType(proxyType)
+		if (parser):
+			parser.readSubscriptionConfig(url)
+			return parser.getAllConfig()
+		return []
+	
+	def webSetup(self,**kwargs):
+		self.testMethod = kwargs.get("testMethod","SOCKET")
+		self.proxyType = kwargs.get("proxyType","SSR")
+		self.colors = kwargs.get("colors","origin")
+		self.sortMethod = kwargs.get("sortMethod","")
+		self.testMode = kwargs.get("testMode","TCP_PING")
+		self.__parser = self.__getParserByProxyType(self.proxyType)
+		self.__client = self.__getClientByProxyType(self.proxyType)
 
-	def setup(self):
-	#	self.__setProxyType()
-		if (self.proxyType == "SSR"):
-			self.__client = SSRClient()
-			self.__parser = SSRParser()
-		elif (self.proxyType == "SSR-C#"):
-			self.__client = SSRClient()
-			self.__client.useSsrCSharp = True
-			self.__parser = SSRParser()
-		elif(self.proxyType == "SS"):
-			self.__client= SSClient()
-			self.__parser = SSParser()
-		elif(self.proxyType == "V2RAY"):
-			self.__client = V2RayClient()
-			self.__parser = V2RayParser()
-		self.__readNodes()
+	def webSetConfigs(self,configs):
+		if (self.__parser):
+			self.__parser.cleanConfigs()
+			self.__parser.addConfigs(configs)
 
-	def clean(self):
+	def startTest(self):
+		self.__stc = SpeedTestCore(self.__parser,self.__client,self.testMethod)
+		self.__status = "running"
+		if (self.testMode == "TCP_PING"):
+			self.__stc.tcpingOnly()
+		elif(self.testMode == "ALL"):
+			self.__stc.fullTest()
+		self.__status = "stopped"
+		self.__results = self.__stc.getResult()
+		self.__exportResult()
+
+	def __getParserByProxyType(self,proxyType):
+		if (proxyType == "SSR" or proxyType == "SSR-C#"):
+			return SSRParser()
+		elif(proxyType == "SS"):
+			return SSParser()
+		elif(proxyType == "V2RAY"):
+			return V2RayParser()
+
+	def __getClientByProxyType(self,proxyType):
+		if (proxyType == "SSR"):
+			return SSRClient()
+		elif (proxyType == "SSR-C#"):
+			client = SSRClient()
+			client.useSsrCSharp = True
+			return client
+		elif(proxyType == "SS"):
+			return SSClient()
+		elif(proxyType == "V2RAY"):
+			return V2RayClient()
+
+	def cleanResults(self):
 		self.__results = []
 		if (self.__stc):
 			self.__stc.resetStatus()
@@ -70,7 +112,7 @@ class SSRSpeedCore(object):
 	def getResults(self):
 		return self.__results
 
-	def getWebStatus(self):
+	def webGetResults(self):
 		if (self.__status == "running"):
 			if (self.__stc):
 				status = "running"
@@ -80,10 +122,10 @@ class SSRSpeedCore(object):
 			status = self.__status
 		r = {
 			"status":status,
-			"current":self.__stc.getCurrent() if (self.__stc) else {},
+			"current":self.__stc.getCurrent() if (self.__stc and status == "running") else {},
 			"results":self.__stc.getResult() if (self.__stc) else []
 		}
-		return json.dumps(r)
+		return r
 	
 	def __readNodes(self):
 		self.__parser.cleanConfigs()
@@ -99,7 +141,7 @@ class SSRSpeedCore(object):
 		self.__parser.excludeNode([],[],config["excludeRemarks"])
 		self.__parser.filterNode(fk,fgk,frk)
 		self.__parser.excludeNode(ek,egk,erk)
-		print(len(self.__parser.getAllConfig()))
+	#	print(len(self.__parser.getAllConfig()))
 		self.__parser.printNode()
 		logger.info("{} node(s) will be test.".format(len(self.__parser.getAllConfig())))
 
@@ -113,20 +155,5 @@ class SSRSpeedCore(object):
 		er.setColors(self.colors)
 		er.export(self.__results,split,exportType,self.sortMethod)
 
-	def startTcpingOnlyTest(self):
-		self.__stc = SpeedTestCore(self.__parser,self.__client,self.testMethod)
-		self.__status = "running"
-		self.__stc.tcpingOnly()
-		self.__results = self.__stc.getResult()
-		self.__status = "stopped"
-		self.__exportResult()
-
-	def startFullTest(self):
-		self.__stc = SpeedTestCore(self.__parser,self.__client,self.testMethod)
-		self.__status = "running"
-		self.__stc.fullTest()
-		self.__results = self.__stc.getResult()
-		self.__status = "stopped"
-		self.__exportResult()
 
 

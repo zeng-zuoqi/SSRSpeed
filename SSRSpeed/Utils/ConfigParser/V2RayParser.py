@@ -113,7 +113,8 @@ class V2RayParser(BaseParser):
 				for sub in subList:
 					if (subId == sub.get("id","")):
 						_dict["group"] = sub.get("remarks","N/A")
-			self._configList.append(self.__generateConfig(_dict))
+			_cfg = self.__generateConfig(_dict)
+			self._configList.append()
 		logger.info("Read %d node(s)" % len(self._configList))
 	#	logger.critical("V2RayN configuration file will be support soon.")
 		
