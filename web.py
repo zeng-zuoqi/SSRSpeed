@@ -24,7 +24,7 @@ import SSRSpeed.Result.importResult as importResult
 
 from config import config
 
-WEB_API_VERSION = "0.3.0-alpha"
+WEB_API_VERSION = config["WEB_API_VERSION"]
 
 if (not os.path.exists("./logs/")):
 	os.mkdir("./logs/")
@@ -44,7 +44,7 @@ consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
 TEMPLATE_FOLDER = "./resources/webui/templates"
-STATIC_FOLDER = "./resources/webui/static"
+STATIC_FOLDER = "./resources/webui/statics"
 
 app = Flask(__name__,
 	template_folder=TEMPLATE_FOLDER,
@@ -57,7 +57,7 @@ sc = None
 @app.route("/",methods=["GET"])
 def index():
 	return render_template(
-		"web.html"
+		"index.html"
 		)
 
 '''
@@ -107,8 +107,6 @@ def startTest():
 		configs = data.get("configs",[])
 		if (not configs):
 			return "No configs"
-		sc.cleanResults()
-		sc.webSetConfigs(configs)
 		proxyType =data.get("proxyType","SSR")
 		testMethod =data.get("testMethod","SOCKET")
 		colors =data.get("colors","origin")
@@ -121,6 +119,8 @@ def startTest():
 			sortMethod = sortMethod,
 			proxyType = proxyType
 		)
+		sc.cleanResults()
+		sc.webSetConfigs(configs)
 		sc.startTest()
 		return 'done'
 	return 'invalid method'

@@ -1,6 +1,8 @@
 #coding:utf-8
 
 config = {
+	"VERSION":"2.4.0-beta",
+	"WEB_API_VERSION":"0.4.0-beta",
 	"localAddress":"127.0.0.1",
 	"localPort":1087,
 	"excludeRemarks":[

@@ -1,4 +1,5 @@
 
+
   
 <h1 align="center">
     <br>SSRSpeed
@@ -29,6 +30,7 @@ Batch speed measuring tool based on Shadowsocks(R)
 - Support for exporting result as json and png.
 - Support batch import of configuration from GUI configuration file and SSPanel-v2, v3 subscription link.
 - Support for importing data from any Json export file and re-exporting files of the specified format.
+- Support WebUI
 
 ## Requirements 
 
@@ -37,6 +39,8 @@ Universal dependency
 - pillow
 - requests
 - pysocks
+- flask
+- flask-cors
 
 Linux dependency
  - [libsodium](https://github.com/jedisct1/libsodium)
@@ -48,6 +52,8 @@ Linux dependency
 2. Ubuntu 18.04 LTS
 
 ## Getting started
+
+### Console Usage
 pip install -r requirements.txt
 or
 pip3 install -r requirements.txt
@@ -100,6 +106,11 @@ The parameter priority is as follows:
 > --include > --include-group > --include-remark
 > --exclude > --exclude-group > --exclude-remark
 > The above sequence indicates that node filtering will be performed in descending order of priority.
+
+### Web UI (Testing)
+
+    python web.py
+    You can now access the WebUI through http://127.0.0.1:10870 
 
 ## Advanced Usage
 

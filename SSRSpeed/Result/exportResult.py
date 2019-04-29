@@ -185,7 +185,7 @@ class ExportResult(object):
 		files = []
 		if (id > 0):
 			draw.text((5,imageHeight + 4),
-				"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", generatedTime) + ("-%d By SSRSpeed" % id),
+				"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", generatedTime) + ("-{} By SSRSpeed {}.".format(id,config["VERSION"])),
 				font=resultFont,
 				fill=(0,0,0)
 			)
@@ -196,7 +196,7 @@ class ExportResult(object):
 			logger.info("Result image saved as %s" % filename)
 		else:
 			draw.text((5,imageHeight + 4),
-				"Generated at {} By SSRSpeed.".format(time.strftime("%Y-%m-%d %H:%M:%S", generatedTime)),
+				"Generated at {} By SSRSpeed {}.".format(time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),config["VERSION"]),
 				font=resultFont,
 				fill=(0,0,0)
 			)

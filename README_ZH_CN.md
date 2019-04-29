@@ -1,4 +1,5 @@
 
+
   
 <h1 align="center">
     <br>SSRSpeed
@@ -27,6 +28,7 @@
 - 支持导出结果为 json 和 png
 - 支持从GUI的配置文件（gui-config.json）导入或者从订阅链接导入（确认支持SSPanelv2,v3）
 - 支持从导出的json文件再次导入并导出为指定格式
+- 支持WebUI
 
 ## 依赖
 
@@ -35,6 +37,8 @@
 - pillow
 - requests
 - pysocks
+- flask
+- flask-cors
 
 Linux 依赖
  - [libsodium](https://github.com/jedisct1/libsodium)
@@ -46,6 +50,7 @@ Linux 依赖
 2. Ubuntu 18.04 LTS
 
 ## 快速上手
+### 命令行用法
 pip install -r requirements.txt
 or
 pip3 install -r requirements.txt
@@ -97,6 +102,11 @@ pip3 install -r requirements.txt
 > --exclude > --exclude-group > --exclude-remark
 > 当以上三个参数中多于一个被使用时，参数的采用顺序如上所示，将从优先级最大的参数开始过滤。
 
+### Web UI（测试中）
+
+    python web.py
+    此时访问 http://127.0.0.1:10870/ 可以进入Web UI
+
 ## 高级用法
  - **规则**
    - 程序拥有内置的规则匹配模式通过自定义规则匹配特定ISP或者特定地区的节点使用特定的下载测速源，规则已内置于config.py文件中，查看它以获得更多的信息。
@@ -108,11 +118,11 @@ pip3 install -r requirements.txt
 - [@ranwen](https://github.com/ranwen)
 
 ## 感谢
-- New color scheme
+- 新配色方案
    - Chunxiaoyi 纯小亦
-- Bugs Report
+- Bug 反馈
    -  [Professional-V1](https://t.me/V1_BLOG)
    -  [Julydate 七夏浅笑](https://www.julydate.com/)
-- This project uses the following open source projects
+- 此项目还使用了这些开源项目
    -  [speedtest-cli](https://github.com/sivel/speedtest-cli)
    -  [Fast.com-cli](https://github.com/nkgilley/fast.com)
