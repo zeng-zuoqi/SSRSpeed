@@ -1,7 +1,7 @@
 #coding:utf-8
 
 import logging
-import copy
+
 logger = logging.getLogger("Sub")
 
 from SSRSpeed.Utils.ConfigParser.BaseParser import BaseParser
@@ -12,7 +12,7 @@ class ShadowsocksRParser(BaseParser):
 		super(ShadowsocksRParser,self).__init__()
 
 	def _parseLink(self,link):
-		_config = copy.deepcopy(self._baseShadowsocksConfig)
+		_config = self._getShadowsocksBaseConfig()
 	#	print(self._baseShadowsocksConfig["remarks"])
 		if (link[:6] != "ssr://"):
 			logger.error("Unsupport link : %s" % link)

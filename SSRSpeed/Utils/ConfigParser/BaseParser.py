@@ -6,12 +6,14 @@ import platform
 import os
 import time
 import sys
+import copy
 import urllib.parse
 import logging
 logger = logging.getLogger("Sub")
 
 
 import SSRSpeed.Utils.b64plus as b64plus
+import SSRSpeed.Utils.ConfigParser.BaseConfig.ShadowsocksBaseConfig as SSBaseConf
 from config import config
 
 LOCAL_ADDRESS = config["localAddress"]
@@ -21,28 +23,26 @@ TIMEOUT = 10
 class BaseParser(object):
 	def __init__(self):
 		self._configList = []
-		self._baseShadowsocksConfig = {
-			"server":"",
-			"server_port":-1,
-			"method":"",
-			"protocol":"",
-			"obfs":"",
-			"plugin":"",
-			"password":"",
-			"protocol_param":"",
-			"obfsparam":"",
-			"plugin_opts":"",
-			"plugin_args":"",
-			"remarks":"",
-			"group":"N/A",
-			"timeout":TIMEOUT,
-			"local_port":LOCAL_PORT,
-			"local_address":LOCAL_ADDRESS,
-			"fastopen":False
-		}
+		self.__baseShadowsocksConfig = SSBaseConf.getConfig()
+		self.__baseShadowsocksConfig["timeout"] = TIMEOUT
+		self.__baseShadowsocksConfig["local_port"] = LOCAL_PORT
+		self.__baseShadowsocksConfig["local_address"] = LOCAL_ADDRESS
+
+	def cleanConfigs(self):
+		self._configList = []
+	
+	def addConfigs(self,newConfigs):
+		for item in newConfigs:
+			self._configList.append(item)
 
 	def _parseLink(self,link):
 		return {}
+
+	def _getLocalConfig(self):
+		return (LOCAL_ADDRESS,LOCAL_PORT)
+	
+	def _getShadowsocksBaseConfig(self):
+		return copy.deepcopy(self.__baseShadowsocksConfig)
 
 	def __checkInList(self,item,_list):
 		for _item in _list:

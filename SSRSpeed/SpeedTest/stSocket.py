@@ -7,6 +7,7 @@ import requests
 import json
 import time
 import re
+import copy
 import logging
 
 logger = logging.getLogger("Sub")
@@ -183,16 +184,16 @@ def speedTestSocket(port):
 	EXIT_FLAG = False
 	socks.set_default_proxy(socks.SOCKS5,"127.0.0.1",LOCAL_PORT)
 	socket.socket = socks.socksocket
-	ii = 0
-	threadCount = threading.active_count()
-	while (threadCount > 1):
-		logger.info("Waiting for thread exit,please wait,thread count : %d" % (threadCount - 1))
-		ii += 1
-		time.sleep(2)
-		threadCount = threading.active_count()
-		if (ii >= 3):
-			logger.warn("%d thread(s) still running,skipping." % (threadCount - 1))
-			break
+#	ii = 0
+#	threadCount = threading.active_count()
+#	while (threadCount > 1):
+#		logger.info("Waiting for thread exit,please wait,thread count : %d" % (threadCount - 1))
+#		ii += 1
+#		time.sleep(2)
+#		threadCount = threading.active_count()
+#		if (ii >= 3):
+#			logger.warn("%d thread(s) still running,skipping." % (threadCount - 1))
+#			break
 	for i in range(0,MAX_THREAD):
 		nmsl = threading.Thread(target=speedTestThread,args=(link,))
 		nmsl.start()
@@ -214,7 +215,7 @@ def speedTestSocket(port):
 	#	if (maxSpeed not in maxSpeedList):
 		maxSpeedList.append(currentSpeed)
 	#	print("maxSpeed : %.2f" % (maxSpeed / 1024 / 1024))
-		print("\r[" + "="*i + "> [%d%%/100%%] [%.2f MB/s]" % (int(i * 5),currentSpeed / 1024 / 1024),end='')
+		print("\r[" + "="*i + "> [%d%%/100%%] [Thread Count : %d] [%.2f MB/s]" % (int(i * 5),threading.active_count() - 1,currentSpeed / 1024 / 1024),end='')
 		if (EXIT_FLAG):
 			break
 	print("\r[" + "="*i + "] [100%%/100%%] [%.2f MB/s]" % (currentSpeed / 1024 / 1024),end='\n')
@@ -227,7 +228,7 @@ def speedTestSocket(port):
 		logger.error("Socket Test Error !")
 		return(0,0)
 	restoreSocket()
-	rawSpeedList = maxSpeedList
+	rawSpeedList = copy.deepcopy(maxSpeedList)
 	maxSpeedList.sort()
 #	print (maxSpeedList)
 	if (len(maxSpeedList) > 12):

@@ -25,28 +25,24 @@ class Base(object):
 	def _checkPlatform(self):
 		return checkPlatform()
 
-	def addConfig(self,configList):
-		self._configList = configList
+	def _beforeStopClient(self):
+		pass
 
 	def startClient(self,config={}):
 		pass
 
-	def getCurrrentConfig(self):
-		pass
-	
-	def nextWinConf(self):
-		pass
-
 	def stopClient(self):
+		self._beforeStopClient()
 		if(self._process != None):
 			if (self._checkPlatform() == "Windows"):
 				self._process.terminate()
+			#	self._process.send_signal(signal.SIGINT)
 			else:
-				self._process.send_signal(signal.SIGQUIT)
+			#	self._process.send_signal(signal.SIGQUIT)
 				self._process.send_signal(signal.SIGINT)
 	#		print (self.__process.returncode)
 			self._process = None
-			logger.info("Shadowsocks(R) terminated.")
+			logger.info("Client terminated.")
 	#	self.__ssrProcess.terminate()
 
 if (__name__ == "__main__"):

@@ -9,6 +9,7 @@ import logging
 logger = logging.getLogger("Sub")
 
 from SSRSpeed.Result.uploadResult import pushToServer
+from SSRSpeed.Utils.sorter import Sorter
 
 from config import config
 
@@ -49,6 +50,26 @@ class ExportResult(object):
 				return
 		logger.warn("Color {} not found in config.".format(name))
 
+	def export(self,result,split = 0,exportType = 0,sortMethod = ""):
+		if (not exportType):
+			self.__exportAsJson(result)
+		sorter = Sorter()
+		result = sorter.sortResult(result,sortMethod)
+		if (split > 0):
+			i = 0
+			id = 1
+			while (i < len(result)):
+				_list = []
+				for j in range(0,split):
+					_list.append(result[i])
+					i += 1
+					if (i >= len(result)):
+						break
+				self.__exportAsPng(_list,id)
+				id += 1
+		else:
+			self.__exportAsPng(result)
+
 	def __getMaxWeight(self,result):
 		font = self.__font
 		draw = ImageDraw.Draw(Image.new("RGB",(1,1),(255,255,255)))
@@ -78,7 +99,7 @@ class ExportResult(object):
 				_result.append(r)
 		return _result
 
-	def exportAsPng(self,result,id=0):
+	def __exportAsPng(self,result,id=0):
 		if (self.__colorSpeedList == []):
 			self.setColors()
 		result = self.__deweighting(result)
@@ -163,14 +184,22 @@ class ExportResult(object):
 					draw.text((dspeedRightPosition + 5,30 * i + 30 + 1),self.__parseSpeed(maxSpeed),font=resultFont,fill=(0,0,0))
 		files = []
 		if (id > 0):
-			draw.text((5,imageHeight + 4),"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", generatedTime) + ("-%d" % id),font=resultFont,fill=(0,0,0))
+			draw.text((5,imageHeight + 4),
+				"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", generatedTime) + ("-{} By SSRSpeed {}.".format(id,config["VERSION"])),
+				font=resultFont,
+				fill=(0,0,0)
+			)
 			draw.line((0,newImageHeight - 1,imageRightPosition,newImageHeight - 1),fill=(127,127,127),width=1)
 			filename = "./results/" + time.strftime("%Y-%m-%d-%H-%M-%S", generatedTime) + "-%d.png" % id
 			resultImg.save(filename)
 			files.append(filename)
 			logger.info("Result image saved as %s" % filename)
 		else:
-			draw.text((5,imageHeight + 4),"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),font=resultFont,fill=(0,0,0))
+			draw.text((5,imageHeight + 4),
+				"Generated at {} By SSRSpeed {}.".format(time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),config["VERSION"]),
+				font=resultFont,
+				fill=(0,0,0)
+			)
 			draw.line((0,newImageHeight - 1,imageRightPosition,newImageHeight - 1),fill=(127,127,127),width=1)
 			filename = "./results/" + time.strftime("%Y-%m-%d-%H-%M-%S", generatedTime) + ".png"
 			resultImg.save(filename)
@@ -219,26 +248,7 @@ class ExportResult(object):
 		return (255,255,255)
 
 
-	def __bakgetColor(self,data):
-		print("Speed {}, ".format(data/1024/1024),end="")
-		if (data > 40 * 1024 * 1024):
-			return (102,102,255)
-		elif (data < 64 * 1024):#0 - 64 KB
-			return self.__newMixColor((255,255,255),(102,255,102),data/1024/64)
-		elif (data < 512 * 1024):#64 - 512 KB
-			return self.__newMixColor((102,255,102),(255,255,102),(data-64*1024)/(512*1024-64*1024))
-		elif (data < 4*1024*1024):#512KB - 4MB
-			return self.__newMixColor((255,255,102),(255,178,102),(data-512*1024)/(4*1024*1024-512*1024))
-		elif(data < 16 * 1024 * 1024):#4 - 16MB
-			return self.__newMixColor((255,178,102),(255,102,102),(data-4*1024*1024)/((16-4)*1024*1024))
-		elif(data < 24 * 1024 * 1024):#16 - 24MB
-			return self.__newMixColor((255,102,102),(226,140,255),(data - 16*1024*1024)/((24-16)*1024*1024))
-		elif(data < 32 * 1024 * 1024):#24 - 32MB
-			return self.__newMixColor((226,140,255),(102,204,255),(data-24*1024*1024)/((32-24)*1024*1024))
-		else:#32 - 40 MB
-			return self.__newMixColor((102,204,255),(102,102,255),(data-32*1024*1024)/((40-32)*1024*1024))
-
-	def exportAsJson(self,result):
+	def __exportAsJson(self,result):
 		result = self.__deweighting(result)
 		filename = "./results/" + time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + ".json"
 		with open(filename,"w+",encoding="utf-8") as f:

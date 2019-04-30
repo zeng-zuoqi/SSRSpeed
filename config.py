@@ -1,6 +1,8 @@
 #coding:utf-8
 
 config = {
+	"VERSION":"2.4.1",
+	"WEB_API_VERSION":"0.4.1-beta",
 	"localAddress":"127.0.0.1",
 	"localPort":1087,
 	"excludeRemarks":[
@@ -8,6 +10,11 @@ config = {
 		"到期时间",
 		"过期时间"
 	],
+	"web":{
+		"listen":"127.0.0.1",
+		"port":10870,
+		"token":""
+	},
 	"exportResult":{
 		"hideMaxSpeed":True,
 		"uploadResult":False,
@@ -55,7 +62,7 @@ config = {
 		"remark":"Example Remark."
 	},
 	"speedtestsocket":{
-		"maxThread":8,	#Thread count
+		"maxThread":4,	#Thread count
 		"buffer":4096,	#Buffer size,bytes
 		"skipRuleMatch":False,
 		"rules":[

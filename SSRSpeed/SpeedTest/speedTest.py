@@ -15,15 +15,12 @@ import SSRSpeed.SpeedTest.fast as fast
 import SSRSpeed.SpeedTest.cachefly as cachefly
 import SSRSpeed.SpeedTest.stSocket as stSocket
 
+from config import config
 
-LOCAL_ADDRESS = "127.0.0.1"
-LOCAL_PORT = 1087
+
+LOCAL_ADDRESS = config["localAddress"]
+LOCAL_PORT = config["localPort"]
 DEFAULT_SOCKET = socket.socket
-
-def setInfo(ADDRESS,PORT):
-	global LOCAL_ADDRESS,LOCAL_PORT
-	LOCAL_ADDRESS = ADDRESS
-	LOCAL_PORT = PORT
 
 class SpeedTest(object):
 	def __init__(self):

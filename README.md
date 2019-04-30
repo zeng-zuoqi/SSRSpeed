@@ -1,4 +1,6 @@
 
+
+
   
 <h1 align="center">
     <br>SSRSpeed
@@ -29,6 +31,7 @@ Batch speed measuring tool based on Shadowsocks(R)
 - Support for exporting result as json and png.
 - Support batch import of configuration from GUI configuration file and SSPanel-v2, v3 subscription link.
 - Support for importing data from any Json export file and re-exporting files of the specified format.
+- Support WebUI
 
 ## Requirements 
 
@@ -37,6 +40,8 @@ Universal dependency
 - pillow
 - requests
 - pysocks
+- flask
+- flask-cors
 
 Linux dependency
  - [libsodium](https://github.com/jedisct1/libsodium)
@@ -48,6 +53,8 @@ Linux dependency
 2. Ubuntu 18.04 LTS
 
 ## Getting started
+
+### Console Usage
 pip install -r requirements.txt
 or
 pip3 install -r requirements.txt
@@ -101,12 +108,111 @@ The parameter priority is as follows:
 > --exclude > --exclude-group > --exclude-remark
 > The above sequence indicates that node filtering will be performed in descending order of priority.
 
+### Web UI (Testing)
+
+    python web.py
+    You can now access the WebUI through http://127.0.0.1:10870 
+
 ## Advanced Usage
 
  - **Rules**
 	 - The program has a built-in rule matching mode that allows specific ISPs or nodes in specific regions to use specific speed sources through custom rules for "Socket" test mode.Rules need to be written in config.py. Please see config.py for more details.
 - **Custom color**
    - Users can customize the color of the resulting image in config.py. See the config.py file for sample configuration.
+
+## Web Apis
+The interfaces encapsulated in web.py are as follows:
+
+|Path| Method | Remark 
+|:-:|:-:|:-:|
+|/getversion | GET | Get backend version information|
+|/status|GET|Get backend status|
+|/readsubscriptions|POST|Get subscriptions|
+|/getcolors|GET|Get the color configuration owned by the backend|
+|/start|POST|Start the test, note that this is a **block request**, will return "done" after the test is completed, **will not have any response**|
+|/getresults|GET|Get the current test result. If the "/start" is blocked, if you need to get the result in real time, you should poll the interface, but the time should not be less than 1s, preventing the backend from taking too much performance impact test.
+
+ - /getversion The interface is requested without any parameters. The return example after the request is successful is as follows:
+
+~~~~
+{
+	"main" : "2.4.1",
+	"webapi" : "0.4.1-beta"
+}
+~~~~
+ - /status The interface is requested without any parameters. The return example after the request is successful is as follows:
+~~~~
+running => Running test.
+stopped => Connected to the backend but no test is running
+~~~~
+ - /readsubscriptions The parameters and examples required to request this interface are returned as follows:
+~~~~
+POST => {
+	"url" : "subscription url",
+	"proxyType" : "Proxy Type"
+}
+Response (Success) => [
+	{
+	"Basic Config"
+	}
+]
+Response (running) => "running" 
+Response (Invalid URL) => "invalid url"
+~~~~
+ - /getcolors The interface is requested without any parameters. The return example after the request is successful is as follows:
+~~~~
+[
+	{
+	"Color Config"
+	}
+]
+~~~~
+ - /getresults The interface is requested without any parameters. The return example after the request is successful is as follows:
+~~~~
+{
+	"status" : "running" or "pending" or "stopped",
+	"current" : {},  //Node information currently being tested
+	"results" : [] //The result array, please refer to the JSON file of the exported result for details.
+}
+~~~~
+ - /start The parameters required to request the interface and return are as follows, **NOTE**, this interface is a **blocking interface**
+~~~~
+POST => {
+	"testMethod" : "Test Method",
+	"proxyType" : "Proxy Type",
+	"testMode" : "Test Mode",
+	"colors" : "Color Name", //Ignorable
+	"sortMethod" : "Sort Method", //Ignorable
+	"configs":[] //Standard configuration array
+}
+Response (Task Done) => "done"
+Response (running) => "running" 
+Response (No Configs) => "no configs"
+~~~~
+
+- Test Modes
+
+|Mode|Remark|
+|:-:|:-:|
+|TCP_PING|Only tcp ping, no speed test|
+|ALL|Full test|
+
+ - Test Methods
+
+|Methods|Remark|
+|:-:|:-:|
+|SOCKET|Socket download speed test|
+|SPEED_TEST_NET|Speed Test Net speed test|
+|FAST|Fast.com speed test|
+
+ - Proxy Types
+
+ |Proxy|Client|Config Parser|
+ |:-:|:-:|:-:|
+ |SSR|ShadowsocksR-libev (Windows)<br>ShadowsocksR-Python (Linux and MacOS)|ShadowsocksR|
+ |SSR-C#|ShadowsocksR-C# (Windows)<br>ShadowsocksR-Python (Linux and MacOS)|ShadowsocksR|
+ |SS|Shadowsocks-libev (All Platform)|Shadowsocks and ShadowsocksD|
+ |V2RAY|V2Ray-Core (All Platform)|V2RayN
 
 ## Developers
 - [@ranwen](https://github.com/ranwen)
