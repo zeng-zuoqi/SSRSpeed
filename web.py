@@ -77,6 +77,15 @@ def index():
 	}
 '''
 
+@app.route("/getversion",methods=["GET"])
+def getVersion():
+	return json.dumps(
+		{
+			"main":config["VERSION"],
+			"webapi":config["WEB_API_VERSION"]
+		}
+	)
+
 @app.route("/status",methods=["GET"])
 def status():
 	return sc.webGetStatus()

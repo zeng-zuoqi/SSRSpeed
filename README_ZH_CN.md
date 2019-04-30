@@ -1,5 +1,6 @@
 
 
+
   
 <h1 align="center">
     <br>SSRSpeed
@@ -114,6 +115,99 @@ pip3 install -r requirements.txt
  - **自定义配色**
    - 用户可以通过修改 config.py 中的配色部分和 -C 参数来自定义导出图片的配色方案，请查看 config.py 文件获得更多细节。
 
+## Web Apis
+在 web.py 中封装的Api接口概览如下
+
+|调用地址| 请求方式 | 说明 
+|:-:|:-:|:-:|
+|/getversion | GET | 获取后端版本信息|
+|/status|GET|获取当前后端状态|
+|/readsubscriptions|POST|获取订阅|
+|/getcolors|GET|获取后端拥有的颜色配置|
+|/start|POST|开始测试，注意这是一个**阻塞请求**，测试完成后会返回"done"，此前**不会**有任何回应|
+|/getresults|GET|获取当前的测试结果，在"/start"被阻塞的情况下如果需要实时获取结果，应轮询该接口，但是时间不应低于1s，防止后端占用过多的性能影响测试
+
+ - /getversion 请求该接口无需任何参数，请求成功后的返回示例如下
+
+~~~~
+{
+	"main" : "2.4.1",
+	"webapi" : "0.4.1-beta"
+}
+~~~~
+ - /status 请求该接口无需任何参数，示例返回如下
+~~~~
+running => 表示有测试正在运行
+stopped => 表示与后端连接正常但是无测试正在运行
+~~~~
+ - /readsubscriptions 请求该接口所需参数和示例返回如下
+~~~~
+POST => {
+	"url" : "subscription url",
+	"proxyType" : "Proxy Type"
+}
+Response (Success) => [
+	{
+	"Basic Config"
+	}
+]
+Response (running) => "running" 
+Response (Invalid URL) => "invalid url"
+~~~~
+ - /getcolors 请求该接口无需任何参数，示例返回如下
+~~~~
+[
+	{
+	"Color Config"
+	}
+]
+~~~~
+ - /getresults 请求该接口无需任何参数，示例返回如下
+~~~~
+{
+	"status" : "running" or "pending" or "stopped",
+	"current" : {},  //当前正在测试的节点信息
+	"results" : [] //结果数组，详情请参考导出结果的JSON文件
+}
+~~~~
+ - /start 请求该接口所需的参数和返回如下，**特别注意**，这个接口是一个**阻塞操作**
+~~~~
+POST => {
+	"testMethod" : "Test Method",
+	"proxyType" : "Proxy Type",
+	"colors" : "Color Name", //可忽略
+	"sortMethod" : "Sort Method", //可忽略
+	"configs":[] //标准配置的数组
+}
+Response (Task Done) => "done"
+Response (running) => "running" 
+Response (No Configs) => "no configs"
+~~~~
+
+- Test Modes
+
+|Mode|Remark|
+|:-:|:-:|
+|TCP_PING|Only tcp ping, no speed test|
+|ALL|Full test|
+
+ - Test Methods
+
+|Methods|Remark|
+|:-:|:-:|
+|SOCKET|Socket download speed test|
+|SPEED_TEST_NET|Speed Test Net speed test|
+|FAST|Fast.com speed test|
+
+ - Proxy Types
+
+ |Proxy|Client|Config Parser|
+ |:-:|:-:|:-:|
+ |SSR|ShadowsocksR-libev (Windows)<br>ShadowsocksR-Python (Linux and MacOS)|ShadowsocksR|
+ |SSR-C#|ShadowsocksR-C# (Windows)<br>ShadowsocksR-Python (Linux and MacOS)|ShadowsocksR|
+ |SS|Shadowsocks-libev (All Platform)|Shadowsocks and ShadowsocksD|
+ |V2RAY|V2Ray-Core (All Platform)|V2RayN
+
 ## 开发者
 - [@ranwen](https://github.com/ranwen)
 
@@ -126,3 +220,4 @@ pip3 install -r requirements.txt
 - 此项目还使用了这些开源项目
    -  [speedtest-cli](https://github.com/sivel/speedtest-cli)
    -  [Fast.com-cli](https://github.com/nkgilley/fast.com)
+
