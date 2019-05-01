@@ -18,13 +18,15 @@ class ParserV2RayN(object):
 		except json.JSONDecodeError:
 			return None
 		try:
-			cfgVersion = _conf.get("v","1")
+			#logger.debug(_conf)
+			cfgVersion = str(_conf.get("v","1"))
 			server = _conf["add"]
 			port = int(_conf["port"])
 			_type = _conf.get("type","none") #Obfs type
 			uuid = _conf["id"]
 			aid = int(_conf["aid"])
 			net = _conf["net"]
+			group = "N/A"
 			if (cfgVersion == "2"):
 				host = _conf.get("host","") # http host,web socket host,h2 host,quic encrypt method
 				path = _conf.get("path","") #Websocket path, http path, quic encrypt key
@@ -36,11 +38,13 @@ class ParserV2RayN(object):
 				except IndexError:
 					pass
 			tls = _conf.get("tls","none") #TLS
+			tlsHost = host
 			security = _conf.get("security","auto")
 			remarks = _conf.get("ps",server)
-			logger.debug("Server : {},Port : {},Path : {},Type : {},UUID : {},AlterId : {},Network : {},Host : {},TLS : {},Remarks : {}".format(
+			logger.debug("Server : {},Port : {}, tls-host : {}, Path : {},Type : {},UUID : {},AlterId : {},Network : {},Host : {},TLS : {},Remarks : {},group={}".format(
 				server,
 				port,
+				tlsHost,
 				path,
 				_type,
 				uuid,
@@ -48,7 +52,8 @@ class ParserV2RayN(object):
 				net,
 				host,
 				tls,
-				remarks
+				remarks,
+				group
 			))
 			_config = {
 				"remarks":remarks,
@@ -60,6 +65,7 @@ class ParserV2RayN(object):
 				"type":_type,
 				"path":path,
 				"network":net,
+				"tls-host":tlsHost,
 				"host":host,
 				"tls":tls
 			}

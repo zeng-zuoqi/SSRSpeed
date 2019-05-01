@@ -19,30 +19,52 @@ class ParserQuantumult(object):
 			remarks = linkSplited[0].split(" = ")[0]
 			server = linkSplited[1]
 			port = int(linkSplited[2])
-			method = linkSplited[3]
-			uuid = linkSplited[4]
+			security = linkSplited[3]
+			uuid = linkSplited[4].replace("\"","")
 			group = linkSplited[5].split("=")[1]
-			tls = "none"
+			tls = ""
+			tlsHost = ""
+			host = "" # http host,web socket host,h2 host,quic encrypt method
+			net = "tcp"
+			path = "" #Websocket path, http path, quic encrypt key
+			headers = []
+
 			if (linkSplited[6].split("=")[1] == "true"):
 				tls = "tls"
-			
-			path = _conf.get("path","") #Websocket path, http path, quic encrypt key
-			_type = _conf.get("type","none") #Obfs type
-			uuid = _conf["id"]
-			aid = int(_conf["aid"])
-			net = _conf["net"]
-			host = _conf.get("host","") # http host,web socket host,h2 host,quic encrypt method
-			tls = _conf.get("tls","") #TLS
-			security = _conf.get("security","auto")
-			logger.debug("Server : {},Port : {},Path : {},Type : {},UUID : {},AlterId : {},Network : {},Host : {},TLS : {},Remarks : {},group={}".format(
+				tlsHost = linkSplited[7].split("=")[1]
+				allowInsecure = False if (linkSplited[8].split("=")[1] == "1") else True
+			else:
+				allowInsecure = True
+			i = 7
+			if (tls):
+				i = 8
+			if (len(linkSplited) == 12):
+				net = linkSplited[i+1].split("=")[1]
+				path = linkSplited[i+2].split("=")[1].replace("\"","")
+				header = linkSplited[i+3].split("=")[1].replace("\"","").split("[Rr][Nn]")
+				if (len(header) > 0):
+					host = header[0].split(": ")[1]
+					for h in range(1,len(header)):
+						headers.append(
+							{
+								"header":header[h].split(": ")[0],
+								"value":header[h].split(": ")[1]
+							}
+						)
+
+			_type = "none" #Obfs type under tcp mode
+			aid = 0
+			logger.debug("Server : {},Port : {}, tls-host : {}, Path : {},Type : {},UUID : {},AlterId : {},Network : {},Host : {}, Headers : {},TLS : {},Remarks : {},group={}".format(
 				server,
 				port,
+				tlsHost,
 				path,
 				_type,
 				uuid,
 				aid,
 				net,
 				host,
+				headers,
 				tls,
 				remarks,
 				group
@@ -55,11 +77,14 @@ class ParserQuantumult(object):
 				"id":uuid,
 				"alterId":aid,
 				"security":security,
+				"allowInsecure":allowInsecure,
 				"type":_type,
 				"path":path,
 				"network":net,
 				"host":host,
-				"tls":tls
+				"headers":headers,
+				"tls":tls,
+				"tls-host":tlsHost
 			}
 			return _config
 		except:

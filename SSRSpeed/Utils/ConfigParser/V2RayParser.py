@@ -40,6 +40,8 @@ class V2RayParser(BaseParser):
 			webSocketSettings = V2RayConfig.getWebSocketSettingsObject()
 			webSocketSettings["path"] = config["path"]
 			webSocketSettings["headers"]["Host"] = config["host"]
+			for h in config.get("headers",[]):
+				webSocketSettings["headers"][h["header"]] = h["value"]
 			streamSettings["wsSettings"] = webSocketSettings
 		elif(config["network"] == "h2"):
 			httpSettings = V2RayConfig.getHttpSettingsObject()
@@ -57,7 +59,7 @@ class V2RayParser(BaseParser):
 		if (config["tls"] == "tls"):
 			tlsSettings = V2RayConfig.getTlsSettingsObject()
 			tlsSettings["allowInsecure"] = True if (config.get("allowInsecure","false") == "true") else False
-			tlsSettings["serverName"] = config["host"]
+			tlsSettings["serverName"] = config["tls-host"]
 			streamSettings["tlsSettings"] = tlsSettings
 
 		_config["outbounds"][0]["streamSettings"] = streamSettings
@@ -78,9 +80,9 @@ class V2RayParser(BaseParser):
 			return None
 		pv2rn = ParserV2RayN()
 		cfg = pv2rn.parseConfig(link)
-	#	if (not cfg):
-	#		pq = ParserQuantumult()
-	#		cfg = pq.parseConfig(link)
+		if (not cfg):
+			pq = ParserQuantumult()
+			cfg = pq.parseConfig(link)
 		if (not cfg):
 			logger.error("Parse link {} failed.".format(link))
 			return None
