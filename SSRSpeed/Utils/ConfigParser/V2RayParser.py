@@ -6,6 +6,7 @@ import json
 logger = logging.getLogger("Sub")
 
 from SSRSpeed.Utils.ConfigParser.BaseParser import BaseParser
+from SSRSpeed.Utils.ConfigParser.V2RayParsers.ClashParser import ParserV2RayClash
 from SSRSpeed.Utils.ConfigParser.V2RayParsers.V2RayNParser import ParserV2RayN
 from SSRSpeed.Utils.ConfigParser.V2RayParsers.QuantumultParser import ParserQuantumult
 import SSRSpeed.Utils.ConfigParser.BaseConfig.V2RayBaseConfig as V2RayConfig
@@ -89,32 +90,18 @@ class V2RayParser(BaseParser):
 		return self.__generateConfig(cfg)
 	
 	def readGuiConfig(self,filename):
-		with open(filename,"r",encoding="utf-8") as f:
-			config = json.load(f)
-			f.close()
-		subList = config.get("subItem",[])
-		for item in config["vmess"]:
-			_dict = {
-				"server":item["address"],
-				"server_port":item["port"],
-				"id":item["id"],
-				"alterId":item["alterId"],
-				"security":item.get("security","auto"),
-				"type":item.get("headerType","none"),
-				"path":item.get("path",""),
-				"network":item["network"],
-				"host":item.get("requestHost",""),
-				"tls":item.get("streamSecurity",""),
-				"allowInsecure":item.get("allowInsecure",""),
-				"subId":item.get("subid",""),
-				"remarks":item.get("remarks",item["address"]),
-				"group":"N/A"
-			}
-			subId = _dict["subId"]
-			if (subId != ""):
-				for sub in subList:
-					if (subId == sub.get("id","")):
-						_dict["group"] = sub.get("remarks","N/A")
+		pv2rc = ParserV2RayClash()
+		v2rnp = ParserV2RayN()
+		rawGuiConfigs = pv2rc.parseGuiConfig(filename)
+		if (rawGuiConfigs == False):
+			logger.info("Not Clash Config.")
+			rawGuiConfigs = v2rnp.parseGuiConfig(filename)
+			if (rawGuiConfigs == False):
+				logger.info("Not V2RayN Config.")
+				logger.critical("Gui config parse failed.")
+				rawGuiConfigs = []
+
+		for _dict in rawGuiConfigs:	
 			_cfg = self.__generateConfig(_dict)
 			self._configList.append()
 		logger.info("Read %d node(s)" % len(self._configList))

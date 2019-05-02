@@ -8,7 +8,7 @@ import SSRSpeed.Utils.b64plus as b64plus
 
 class ParserV2RayN(object):
 	def __init__(self):
-		pass
+		self.__decodedConfigs = []
 
 	def parseConfig(self,rawLink):
 		link = rawLink[8:]
@@ -74,4 +74,38 @@ class ParserV2RayN(object):
 			logger.exception("Parse {} failed.(V2RayN Method)".format(rawLink))
 			return None
 
+	def parseGuiConfig(self,filename):
+		with open(filename,"r",encoding="utf-8") as f:
+			try:
+				config = json.load(f)
+			except:
+				logger.exception("Not V2RayN Config.")
+				f.close()
+				return False
+			f.close()
+		subList = config.get("subItem",[])
+		for item in config["vmess"]:
+			_dict = {
+				"server":item["address"],
+				"server_port":item["port"],
+				"id":item["id"],
+				"alterId":item["alterId"],
+				"security":item.get("security","auto"),
+				"type":item.get("headerType","none"),
+				"path":item.get("path",""),
+				"network":item["network"],
+				"host":item.get("requestHost",""),
+				"tls":item.get("streamSecurity",""),
+				"allowInsecure":item.get("allowInsecure",""),
+				"subId":item.get("subid",""),
+				"remarks":item.get("remarks",item["address"]),
+				"group":"N/A"
+			}
+			subId = _dict["subId"]
+			if (subId != ""):
+				for sub in subList:
+					if (subId == sub.get("id","")):
+						_dict["group"] = sub.get("remarks","N/A")
+			self.__decodedConfigs.append(_dict)
+		return self.__decodedConfigs
 	
