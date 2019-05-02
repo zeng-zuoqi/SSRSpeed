@@ -43,6 +43,8 @@ class SpeedTestCore(object):
 			_item["ping"] = latencyTest[0]
 			_item["dspeed"] = -1
 			_item["maxDSpeed"] = -1
+			_item["trafficUsed"] = -1
+			_item["rawSocketSpeed"] = []
 			self.__results.append(_item)
 			logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000)))
 			config = self.__parser.getNextConfig()
