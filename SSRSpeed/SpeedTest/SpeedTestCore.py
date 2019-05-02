@@ -78,8 +78,10 @@ class SpeedTestCore(object):
 						testRes = st.startTest(self.__testMethod)
 					_item["dspeed"] = testRes[0]
 					_item["maxDSpeed"] = testRes[1]
+					_item["trafficUsed"] = -1
 					_item["rawSocketSpeed"] = []
 					try:
+						_item["trafficUsed"] = testRes[3]
 						_item["rawSocketSpeed"] = testRes[2]
 					except:
 						pass
@@ -87,6 +89,7 @@ class SpeedTestCore(object):
 				else:
 					_item["dspeed"] = 0
 					_item["maxDSpeed"] = 0
+					_item["trafficUsed"] = -1
 					_item["rawSocketSpeed"] = []
 				self.__client.stopClient()
 				time.sleep(1)

@@ -20,7 +20,7 @@ from SSRSpeed.Utils.checkPlatform import checkPlatform
 from SSRSpeed.Utils.ConfigParser.ShadowsocksParser import ShadowsocksParser as SSParser
 from SSRSpeed.Utils.ConfigParser.ShadowsocksRParser import ShadowsocksRParser as SSRParser
 from SSRSpeed.Utils.ConfigParser.V2RayParser import V2RayParser
-from SSRSpeed.Utils.checkRequirements import checkShadowsocks
+from SSRSpeed.Utils.RequirementCheck.RequireCheck import RequirementCheck
 
 from config import config
 
@@ -105,11 +105,12 @@ if (__name__ == "__main__"):
 	if (logger.level == logging.DEBUG):
 		logger.debug("Program running in debug mode")
 
+	rc = RequirementCheck()
+	rc.check()
+
 	if (options.proxy_type):
 		if (options.proxy_type.lower() == "ss"):
 			PROXY_TYPE = "SS"
-			if (checkPlatform() != "Windows" and not checkShadowsocks()):
-				sys.exit(1)
 		elif (options.proxy_type.lower() == "ssr"):
 			PROXY_TYPE = "SSR"
 		elif (options.proxy_type.lower() == "ssr-cs"):

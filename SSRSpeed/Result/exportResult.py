@@ -105,7 +105,7 @@ class ExportResult(object):
 		result = self.__deweighting(result)
 		resultFont = self.__font
 		generatedTime = time.localtime()
-		imageHeight = len(result) * 30 + 30
+		imageHeight = len(result) * 30 + 30 
 		weight = self.__getMaxWeight(result)
 		groupWeight = weight[0]
 		remarkWeight = weight[1]
@@ -127,7 +127,7 @@ class ExportResult(object):
 		else:
 			imageRightPosition = dspeedRightPosition
 
-		newImageHeight = imageHeight + 30
+		newImageHeight = imageHeight + 30 * 2
 		resultImg = Image.new("RGB",(imageRightPosition,newImageHeight),(255,255,255))
 		draw = ImageDraw.Draw(resultImg)
 
@@ -152,7 +152,9 @@ class ExportResult(object):
 	
 		draw.line((0,30,imageRightPosition - 1,30),fill=(127,127,127),width=1)
 
+		totalTraffic = 0
 		for i in range(0,len(result)):
+			totalTraffic += result[0]["trafficUsed"]
 			draw.line((0,30 * i + 60,imageRightPosition,30 * i + 60),fill=(127,127,127),width=1)
 			item = result[i]
 
@@ -183,9 +185,18 @@ class ExportResult(object):
 					draw.rectangle((dspeedRightPosition + 1,30 * i + 30 + 1,maxDSpeedRightPosition - 1,30 * i + 60 -1),self.__getColor(maxSpeed))
 					draw.text((dspeedRightPosition + 5,30 * i + 30 + 1),self.__parseSpeed(maxSpeed),font=resultFont,fill=(0,0,0))
 		files = []
+		if (totalTraffic < 0):
+			trafficUsed = "N/A"
+		else:
+			trafficUsed = self.__parseTraffic(totalTraffic)
 		if (id > 0):
 			draw.text((5,imageHeight + 4),
-				"Generated at " + time.strftime("%Y-%m-%d %H:%M:%S", generatedTime) + ("-{} By SSRSpeed {}.".format(id,config["VERSION"])),
+				"Traffic used : {}. Generated at {} - {} By SSRSpeed {}.".format(
+					trafficUsed,
+					time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),
+					id,
+					config["VERSION"]
+				),
 				font=resultFont,
 				fill=(0,0,0)
 			)
@@ -196,7 +207,18 @@ class ExportResult(object):
 			logger.info("Result image saved as %s" % filename)
 		else:
 			draw.text((5,imageHeight + 4),
-				"Generated at {} By SSRSpeed {}.".format(time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),config["VERSION"]),
+				"Generated at {}".format(
+					time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),
+				),
+				font=resultFont,
+				fill=(0,0,0)
+			)
+			draw.line((0,newImageHeight - 30 - 1,imageRightPosition,newImageHeight - 30 - 1),fill=(127,127,127),width=1)
+			draw.text((5,imageHeight + 30 + 4),
+				"Traffic used : {}. By SSRSpeed {}.".format(
+					trafficUsed,
+					config["VERSION"]
+				),
 				font=resultFont,
 				fill=(0,0,0)
 			)
@@ -209,6 +231,15 @@ class ExportResult(object):
 			if (not self.__config["uploadResult"]):
 				break
 			pushToServer(_file)
+
+	def __parseTraffic(self,traffic):
+		traffic = traffic / 1024 / 1024
+		if (traffic < 1):
+			return("%.2f KB" % (traffic * 1024))
+		gbTraffic = traffic / 1024
+		if (gbTraffic < 1):
+			return("%.2f MB" % traffic)
+		return ("%.2f GB" % gbTraffic)
 
 	def __parseSpeed(self,speed):
 		speed = speed / 1024 / 1024

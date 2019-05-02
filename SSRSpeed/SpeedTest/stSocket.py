@@ -215,7 +215,7 @@ def speedTestSocket(port):
 	#	if (maxSpeed not in maxSpeedList):
 		maxSpeedList.append(currentSpeed)
 	#	print("maxSpeed : %.2f" % (maxSpeed / 1024 / 1024))
-		print("\r[" + "="*i + "> [%d%%/100%%] [Thread Count : %d] [%.2f MB/s]" % (int(i * 5),threading.active_count() - 1,currentSpeed / 1024 / 1024),end='')
+		print("\r[" + "="*i + "> [%d%%/100%%] [%.2f MB/s]" % (int(i * 5),currentSpeed / 1024 / 1024),end='')
 		if (EXIT_FLAG):
 			break
 	print("\r[" + "="*i + "] [100%%/100%%] [%.2f MB/s]" % (currentSpeed / 1024 / 1024),end='\n')
@@ -239,8 +239,8 @@ def speedTestSocket(port):
 	else:
 		maxSpeed = currentSpeed
 #	print(maxSpeed / 1024 / 1024)
-	logger.info("Fetched {:.2f} KB in {:.2f} s.".format(TOTAL_RECEIVED / 1000,MAX_TIME))
-	return (TOTAL_RECEIVED / MAX_TIME,maxSpeed,rawSpeedList)
+	logger.info("Fetched {:.2f} KB in {:.2f} s.".format(TOTAL_RECEIVED / 1024,MAX_TIME))
+	return (TOTAL_RECEIVED / MAX_TIME,maxSpeed,rawSpeedList,TOTAL_RECEIVED)
 
 if (__name__ == "__main__"):
 	res = speedTestSocket(1080)
