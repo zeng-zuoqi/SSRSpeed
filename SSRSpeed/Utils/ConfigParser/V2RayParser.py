@@ -6,6 +6,7 @@ import json
 logger = logging.getLogger("Sub")
 
 from SSRSpeed.Utils.ConfigParser.BaseParser import BaseParser
+from SSRSpeed.Utils.ConfigParser.V2RayParsers.ClashParser import ParserV2RayClash
 from SSRSpeed.Utils.ConfigParser.V2RayParsers.V2RayNParser import ParserV2RayN
 from SSRSpeed.Utils.ConfigParser.V2RayParsers.QuantumultParser import ParserQuantumult
 import SSRSpeed.Utils.ConfigParser.BaseConfig.V2RayBaseConfig as V2RayConfig
@@ -40,6 +41,8 @@ class V2RayParser(BaseParser):
 			webSocketSettings = V2RayConfig.getWebSocketSettingsObject()
 			webSocketSettings["path"] = config["path"]
 			webSocketSettings["headers"]["Host"] = config["host"]
+			for h in config.get("headers",[]):
+				webSocketSettings["headers"][h["header"]] = h["value"]
 			streamSettings["wsSettings"] = webSocketSettings
 		elif(config["network"] == "h2"):
 			httpSettings = V2RayConfig.getHttpSettingsObject()
@@ -57,7 +60,7 @@ class V2RayParser(BaseParser):
 		if (config["tls"] == "tls"):
 			tlsSettings = V2RayConfig.getTlsSettingsObject()
 			tlsSettings["allowInsecure"] = True if (config.get("allowInsecure","false") == "true") else False
-			tlsSettings["serverName"] = config["host"]
+			tlsSettings["serverName"] = config["tls-host"]
 			streamSettings["tlsSettings"] = tlsSettings
 
 		_config["outbounds"][0]["streamSettings"] = streamSettings
@@ -77,44 +80,31 @@ class V2RayParser(BaseParser):
 			logger.error("Unsupport link : %s" % link)
 			return None
 		pv2rn = ParserV2RayN()
-		cfg = pv2rn.parseConfig(link)
-	#	if (not cfg):
-	#		pq = ParserQuantumult()
-	#		cfg = pq.parseConfig(link)
+		cfg = pv2rn.parseSubsConfig(link)
+		if (not cfg):
+			pq = ParserQuantumult()
+			cfg = pq.parseSubsConfig(link)
 		if (not cfg):
 			logger.error("Parse link {} failed.".format(link))
 			return None
 		return self.__generateConfig(cfg)
 	
 	def readGuiConfig(self,filename):
-		with open(filename,"r",encoding="utf-8") as f:
-			config = json.load(f)
-			f.close()
-		subList = config.get("subItem",[])
-		for item in config["vmess"]:
-			_dict = {
-				"server":item["address"],
-				"server_port":item["port"],
-				"id":item["id"],
-				"alterId":item["alterId"],
-				"security":item.get("security","auto"),
-				"type":item.get("headerType","none"),
-				"path":item.get("path",""),
-				"network":item["network"],
-				"host":item.get("requestHost",""),
-				"tls":item.get("streamSecurity",""),
-				"allowInsecure":item.get("allowInsecure",""),
-				"subId":item.get("subid",""),
-				"remarks":item.get("remarks",item["address"]),
-				"group":"N/A"
-			}
-			subId = _dict["subId"]
-			if (subId != ""):
-				for sub in subList:
-					if (subId == sub.get("id","")):
-						_dict["group"] = sub.get("remarks","N/A")
+		pv2rc = ParserV2RayClash()
+		v2rnp = ParserV2RayN()
+		rawGuiConfigs = pv2rc.parseGuiConfig(filename)
+		if (rawGuiConfigs == False):
+			logger.info("Not Clash Config.")
+			rawGuiConfigs = v2rnp.parseGuiConfig(filename)
+			if (rawGuiConfigs == False):
+				logger.info("Not V2RayN Config.")
+				logger.critical("Gui config parse failed.")
+				rawGuiConfigs = []
+
+		for _dict in rawGuiConfigs:
 			_cfg = self.__generateConfig(_dict)
-			self._configList.append()
+		#	logger.debug(_cfg)
+			self._configList.append(_cfg)
 		logger.info("Read %d node(s)" % len(self._configList))
 	#	logger.critical("V2RayN configuration file will be support soon.")
 		

@@ -21,7 +21,6 @@ from SSRSpeed.Result.exportResult import ExportResult
 import SSRSpeed.Result.importResult as importResult
 
 from SSRSpeed.SpeedTest.SpeedTestCore import SpeedTestCore
-from SSRSpeed.Utils.checkRequirements import checkShadowsocks
 from SSRSpeed.Utils.checkPlatform import checkPlatform
 from SSRSpeed.Utils.sorter import Sorter
 

@@ -8,10 +8,10 @@ import threading
 import urllib.parse
 import logging
 
-from flask import Flask,request,render_template
+from flask import Flask,request,redirect#,render_template
 from flask_cors import CORS
 
-from SSRSpeed.Utils.checkRequirements import checkShadowsocks
+from SSRSpeed.Utils.RequirementCheck.RequireCheck import RequirementCheck
 from SSRSpeed.Utils.checkPlatform import checkPlatform
 
 from SSRSpeed.Utils.Web.getpostdata import getPostData
@@ -56,9 +56,10 @@ sc = None
 
 @app.route("/",methods=["GET"])
 def index():
-	return render_template(
-		"index.html"
-		)
+	return redirect("https://web.绒布球.site/",301)
+	#return render_template(
+	#	"index.html"
+	#	)
 
 '''
 	{
@@ -176,6 +177,9 @@ if (__name__ == "__main__"):
 
 	if (logger.level == logging.DEBUG):
 		logger.debug("Program running in debug mode")
+
+	rc = RequirementCheck()
+	rc.check()
 
 	sc = SSRSpeedCore()
 	sc.webMode = True
