@@ -11,7 +11,7 @@ class ParserV2RayClash(object):
 		self.__clashVmessConfigs = []
 		self.__decodedConfigs = []
 
-	def __clashConfigigConvert(self,clashCfg):
+	def __clashConfigConvert(self,clashCfg):
 		server = clashCfg["server"]
 		remarks = clashCfg.get("name",server)
 		group = "N/A"
@@ -20,7 +20,7 @@ class ParserV2RayClash(object):
 		aid = int(clashCfg["alterId"])
 		security = clashCfg.get("cipher","auto")
 		tls = "tls" if (clashCfg.get("tls",False)) else "" #TLS
-		allowInsecure = True if (clashCfg.get("skip-cert-verity",False)) else False
+		allowInsecure = True if (clashCfg.get("skip-cert-verify",False)) else False
 		net = clashCfg.get("network","tcp") #ws,tcp
 		_type = clashCfg.get("type","none") #Obfs type
 		wsHeader = clashCfg.get("ws-headers",{})
@@ -31,6 +31,21 @@ class ParserV2RayClash(object):
 				headers[header] = wsHeader[header]
 		tlsHost = host
 		path = clashCfg.get("ws-path","") #Websocket path, http path, quic encrypt key
+		logger.debug("Server : {},Port : {}, tls-host : {}, Path : {},Type : {},UUID : {},AlterId : {},Network : {},Host : {},TLS : {},Remarks : {},group={}".format(
+				server,
+				port,
+				tlsHost,
+				path,
+				_type,
+				uuid,
+				aid,
+				net,
+				host,
+				tls,
+				remarks,
+				group
+			)
+		)
 		return {
 			"remarks":remarks,
 			"group":group,
@@ -50,9 +65,9 @@ class ParserV2RayClash(object):
 		}
 
 	def parseGuiConfig(self,filename):
-		with open(filename,"r+") as f:
+		with open(filename,"r+",encoding="utf-8") as f:
 			try:
-				clashCfg = yaml.load(f)
+				clashCfg = yaml.load(f,Loader=yaml.FullLoader)
 			except:
 				logger.exception("Not Clash config.")
 				f.close()
@@ -72,7 +87,7 @@ class ParserV2RayClash(object):
 			)
 		)
 		for cfg in self.__clashVmessConfigs:
-			self.__decodedConfigs.append(self.__clashConfigigConvert(cfg))
+			self.__decodedConfigs.append(self.__clashConfigConvert(cfg))
 		return self.__decodedConfigs
 
 if (__name__ == "__main__"):

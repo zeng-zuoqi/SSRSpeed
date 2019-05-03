@@ -10,7 +10,7 @@ class ParserV2RayN(object):
 	def __init__(self):
 		self.__decodedConfigs = []
 
-	def parseConfig(self,rawLink):
+	def parseSubsConfig(self,rawLink):
 		link = rawLink[8:]
 		linkDecoded = b64plus.decode(link).decode("utf-8")
 		try:

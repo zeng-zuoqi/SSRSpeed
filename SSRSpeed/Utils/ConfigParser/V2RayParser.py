@@ -80,10 +80,10 @@ class V2RayParser(BaseParser):
 			logger.error("Unsupport link : %s" % link)
 			return None
 		pv2rn = ParserV2RayN()
-		cfg = pv2rn.parseConfig(link)
+		cfg = pv2rn.parseSubsConfig(link)
 		if (not cfg):
 			pq = ParserQuantumult()
-			cfg = pq.parseConfig(link)
+			cfg = pq.parseSubsConfig(link)
 		if (not cfg):
 			logger.error("Parse link {} failed.".format(link))
 			return None
@@ -101,9 +101,10 @@ class V2RayParser(BaseParser):
 				logger.critical("Gui config parse failed.")
 				rawGuiConfigs = []
 
-		for _dict in rawGuiConfigs:	
+		for _dict in rawGuiConfigs:
 			_cfg = self.__generateConfig(_dict)
-			self._configList.append()
+		#	logger.debug(_cfg)
+			self._configList.append(_cfg)
 		logger.info("Read %d node(s)" % len(self._configList))
 	#	logger.critical("V2RayN configuration file will be support soon.")
 		
