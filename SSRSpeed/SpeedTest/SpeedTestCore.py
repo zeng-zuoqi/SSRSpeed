@@ -1,11 +1,12 @@
 #coding:utf-8
 
 import logging
+import copy
 import time
 
 logger = logging.getLogger("Sub")
 
-from SSRSpeed.SpeedTest.speedTest import SpeedTest
+from SSRSpeed.SpeedTest.Methods.SpeedTestMethods import SpeedTest
 
 class SpeedTestCore(object):
 	def __init__(self,parser,client,method = "SOCKET"):
@@ -14,6 +15,20 @@ class SpeedTestCore(object):
 		self.__testMethod = method
 		self.__results = []
 		self.__current = {}
+		self.__baseResult = {
+			"group": "N/A",
+			"remarks": "N/A",
+			"loss": -1,
+			"ping": -1,
+			"dspeed": -1,
+			"maxDSpeed": -1,
+			"trafficUsed": -1,
+			"rawSocketSpeed": [],
+			"rawTcpPingStatus": []
+		}
+
+	def __getBaseResult(self):
+		return copy.deepcopy(self.__baseResult)
 
 	def resetStatus(self):
 		self.__results = []
@@ -32,7 +47,7 @@ class SpeedTestCore(object):
 		st = SpeedTest()
 		while (True):
 			if (config == None):break
-			_item = {}
+			_item = self.__getBaseResult()
 			_item["group"] = config["group"]
 			_item["remarks"] = config["remarks"]
 			self.__current = _item
@@ -41,10 +56,7 @@ class SpeedTestCore(object):
 			latencyTest = st.tcpPing(config["server"],config["server_port"])
 			_item["loss"] = 1 - latencyTest[1]
 			_item["ping"] = latencyTest[0]
-			_item["dspeed"] = -1
-			_item["maxDSpeed"] = -1
-			_item["trafficUsed"] = -1
-			_item["rawSocketSpeed"] = []
+
 			self.__results.append(_item)
 			logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000)))
 			config = self.__parser.getNextConfig()
@@ -60,7 +72,7 @@ class SpeedTestCore(object):
 		curConfCount = 0
 		while(True):
 			if(not config):break
-			_item = {}
+			_item = self.__getBaseResult()
 			_item["group"] = config.get("group","N/A")
 			_item["remarks"] = config.get("remarks",config["server"])
 			config["server_port"] = int(config["server_port"])
@@ -80,19 +92,13 @@ class SpeedTestCore(object):
 						testRes = st.startTest(self.__testMethod)
 					_item["dspeed"] = testRes[0]
 					_item["maxDSpeed"] = testRes[1]
-					_item["trafficUsed"] = -1
-					_item["rawSocketSpeed"] = []
 					try:
 						_item["trafficUsed"] = testRes[3]
 						_item["rawSocketSpeed"] = testRes[2]
 					except:
 						pass
 					time.sleep(1)
-				else:
-					_item["dspeed"] = 0
-					_item["maxDSpeed"] = 0
-					_item["trafficUsed"] = -1
-					_item["rawSocketSpeed"] = []
+
 				self.__client.stopClient()
 				time.sleep(1)
 				_item["loss"] = 1 - latencyTest[1]
