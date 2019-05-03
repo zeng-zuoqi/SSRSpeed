@@ -154,7 +154,7 @@ class ExportResult(object):
 
 		totalTraffic = 0
 		for i in range(0,len(result)):
-			totalTraffic += result[0]["trafficUsed"]
+			totalTraffic += result[i]["trafficUsed"] if (result[i]["trafficUsed"] > 0) else 0
 			draw.line((0,30 * i + 60,imageRightPosition,30 * i + 60),fill=(127,127,127),width=1)
 			item = result[i]
 
