@@ -63,16 +63,8 @@ class ParserV2RayClash(object):
 			"host":host,
 			"tls":tls
 		}
-
-	def parseGuiConfig(self,filename):
-		with open(filename,"r+",encoding="utf-8") as f:
-			try:
-				clashCfg = yaml.load(f,Loader=yaml.FullLoader)
-			except:
-				logger.exception("Not Clash config.")
-				f.close()
-				return False
-			f.close()
+	
+	def __parseConfig(self,clashCfg):
 		for cfg in clashCfg["Proxy"]:
 			if (cfg.get("type","N/A").lower() == "vmess"):
 				self.__clashVmessConfigs.append(cfg)
@@ -88,6 +80,26 @@ class ParserV2RayClash(object):
 		)
 		for cfg in self.__clashVmessConfigs:
 			self.__decodedConfigs.append(self.__clashConfigConvert(cfg))
+		
+	def parseSubsConfig(self,config):
+		try:
+			clashCfg = yaml.load(config,Loader=yaml.FullLoader)
+		except:
+			logger.exception("Not Clash config.")
+			return False
+		self.__parseConfig(clashCfg)
+		return self.__decodedConfigs
+
+	def parseGuiConfig(self,filename):
+		with open(filename,"r+",encoding="utf-8") as f:
+			try:
+				clashCfg = yaml.load(f,Loader=yaml.FullLoader)
+			except:
+				logger.exception("Not Clash config.")
+				f.close()
+				return False
+			f.close()
+		self.__parseConfig(clashCfg)
 		return self.__decodedConfigs
 
 if (__name__ == "__main__"):

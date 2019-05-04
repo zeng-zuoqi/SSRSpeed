@@ -2,6 +2,7 @@
 
 import urllib.parse
 import logging
+import requests
 import json
 logger = logging.getLogger("Sub")
 
@@ -88,6 +89,28 @@ class V2RayParser(BaseParser):
 			logger.error("Parse link {} failed.".format(link))
 			return None
 		return self.__generateConfig(cfg)
+	
+	def readSubscriptionConfig(self,url):
+		header = {
+			"User-Agent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
+		}
+		rep = requests.get(url,headers = header)
+		rep.encoding = "utf-8"
+		rep = rep.content.decode("utf-8")
+		try:
+			linksArr = (b64plus.decode(rep).decode("utf-8")).split("\n")
+			for link in linksArr:
+				link = link.strip()
+			#	print(link)
+				cfg = self._parseLink(link)
+				if (cfg):
+				#	print(cfg["remarks"])
+					self._configList.append(cfg)
+		except ValueError:
+			logger.info("Try V2Ray Clash Parser.")
+			pv2rc = ParserV2RayClash()
+			self._configList = pv2rc.parseSubsConfig(rep)
+		logger.info("Read %d node(s)" % len(self._configList))
 	
 	def readGuiConfig(self,filename):
 		pv2rc = ParserV2RayClash()
