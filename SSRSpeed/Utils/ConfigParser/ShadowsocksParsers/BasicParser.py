@@ -87,16 +87,16 @@ class ParserShadowsocksBasic(object):
 			f.close()
 			for item in configs:
 				_dict = self.__getShadowsocksBaseConfig()
-				_dict["server"]: item["server"]
-				_dict["server_port"]: int(item["server_port"])
-				_dict["password"]: item["password"]
-				_dict["method"]: item["method"]
-				_dict["plugin"]: item.get("plugin","")
-				_dict["plugin_opts"]: item.get("plugin_opts","")
-				_dict["plugin_args"]: item.get("plugin_args","")
-				_dict["remarks"]: item.get("remarks",item["server"])
-				_dict["group"]: item.get("group","N/A")
-				_dict["fast_open"]: False
+				_dict["server"] = item["server"]
+				_dict["server_port"] = int(item["server_port"])
+				_dict["password"] = item["password"]
+				_dict["method"] = item["method"]
+				_dict["plugin"] = item.get("plugin","")
+				_dict["plugin_opts"] = item.get("plugin_opts","")
+				_dict["plugin_args"] = item.get("plugin_args","")
+				_dict["remarks"] = item.get("remarks",item["server"])
+				_dict["group"] = item.get("group","N/A")
+				_dict["fast_open"] = False
 				self.__configList.append(_dict)
 			f.close()
 		logger.info("Read {} config(s).".format(len(self.__configList)))
