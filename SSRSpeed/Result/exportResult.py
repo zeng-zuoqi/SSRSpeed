@@ -102,7 +102,7 @@ class ExportResult(object):
 	def __exportAsPng(self,result,id=0):
 		if (self.__colorSpeedList == []):
 			self.setColors()
-		result = self.__deweighting(result)
+		# result = self.__deweighting(result)
 		resultFont = self.__font
 		generatedTime = time.localtime()
 		imageHeight = len(result) * 30 + 30 
@@ -280,7 +280,7 @@ class ExportResult(object):
 
 
 	def __exportAsJson(self,result):
-		result = self.__deweighting(result)
+		# result = self.__deweighting(result)
 		filename = "./results/" + time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + ".json"
 		with open(filename,"w+",encoding="utf-8") as f:
 			f.writelines(json.dumps(result,sort_keys=True,indent=4,separators=(',',':')))

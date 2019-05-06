@@ -88,7 +88,7 @@ if (__name__ == "__main__"):
 	print("Before you publicly release your speed test results, be sure to ask the node owner if they agree to the release to avoid unnecessary disputes.")
 	print("在您公开发布测速结果之前请务必征得节点拥有者的同意,以避免一些令人烦恼的事情")
 	print("*********************************")
-	input("Press ENTER to conitnue or Crtl+C to exit.")
+	# input("Press ENTER to conitnue or Crtl+C to exit.")
 
 	if (options.debug):
 		DEBUG = options.debug
