@@ -56,7 +56,7 @@ class SpeedTestCore(object):
 			latencyTest = st.tcpPing(config["server"],config["server_port"])
 			_item["loss"] = 1 - latencyTest[1]
 			_item["ping"] = latencyTest[0]
-
+			_item["rawTcpPingStatus"] = latencyTest[2]
 			self.__results.append(_item)
 			logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000)))
 			config = self.__parser.getNextConfig()
@@ -103,6 +103,7 @@ class SpeedTestCore(object):
 				time.sleep(1)
 				_item["loss"] = 1 - latencyTest[1]
 				_item["ping"] = latencyTest[0]
+				_item["rawTcpPingStatus"] = latencyTest[2]
 			#	_item["gping"] = st.googlePing()
 				_item["gping"] = 0
 				self.__results.append(_item)

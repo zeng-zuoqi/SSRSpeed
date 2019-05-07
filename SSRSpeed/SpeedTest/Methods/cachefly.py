@@ -10,6 +10,7 @@ def pingtcptest(host,port):
 	alt=0
 	suc=0
 	fac=0
+	_list = []
 	while suc<5 and fac<5:
 		try:
 			s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,18 +18,22 @@ def pingtcptest(host,port):
 			s.settimeout(3)
 			s.connect((host,port))
 			s.close()
-			alt+=time.time()-st
-			suc+=1
+			deltaTime = time.time()-st
+			alt += deltaTime
+			suc += 1
+			_list.append(deltaTime)
 		except (socket.timeout,ConnectionRefusedError):
 			fac+=1
+			_list.append(0)
 			logger.warn("TCP Ping (%s,%d) Timeout %d times." % (host,port,fac))
 		#	print("TCP Ping Timeout %d times." % fac)
 		except Exception as err:
 			logger.exception("TCP Ping Exception:")
+			_list.append(0)
 			fac+=1
 	if suc==0:
-		return (0,0)
-	return (alt/suc,suc/(suc+fac))
+		return (0,0,_list)
+	return (alt/suc,suc/(suc+fac),_list)
 
 def pinggoogletest(port=1080):
 	alt=0
