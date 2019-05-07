@@ -91,7 +91,7 @@ class BaseParser(object):
 		for gkw in gkwl:
 			_list = []
 			for item in self._configList:
-				if (self.__checkInList(item,_list)):continue
+				# if (self.__checkInList(item,_list)):continue
 				if (gkw not in item["group"]):
 					_list.append(item)
 			self._configList = _list
@@ -101,7 +101,7 @@ class BaseParser(object):
 		for rkw in rkwl:
 			_list = []
 			for item in self._configList:
-				if (self.__checkInList(item,_list)):continue
+				# if (self.__checkInList(item,_list)):continue
 				if (rkw not in item["remarks"]):
 					_list.append(item)
 			self._configList = _list
@@ -114,7 +114,7 @@ class BaseParser(object):
 			for kw in kwl:
 				_list = []
 				for item in self._configList:
-					if (self.__checkInList(item,_list)):continue
+					# if (self.__checkInList(item,_list)):continue
 					if ((kw not in item["group"]) and (kw not in item["remarks"])):
 						_list.append(item)
 				self._configList = _list
