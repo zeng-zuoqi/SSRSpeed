@@ -24,19 +24,28 @@ class ShadowsocksParser(BaseParser):
 		rep.encoding = "utf-8"
 		rep = rep.content.decode("utf-8")
 		if (rep[:6] == "ssd://"):
+			logger.info("Try ShadowsocksD Parser.")
 			pssd = ParserShadowsocksD(self._getShadowsocksBaseConfig())
 			self._configList = pssd.parseSubsConfig(b64plus.decode(rep[6:]).decode("utf-8"))
 		else:
-			linksArr = (b64plus.decode(rep).decode("utf-8")).split("\n")
-			pssb = ParserShadowsocksBasic(self._getShadowsocksBaseConfig())
-			self._configList = pssb.parseSubsConfig(linksArr)
+			try:
+				logger.info("Try Shadowsocks Basic Parser.")
+				linksArr = (b64plus.decode(rep).decode("utf-8")).split("\n")
+				pssb = ParserShadowsocksBasic(self._getShadowsocksBaseConfig())
+				self._configList = pssb.parseSubsConfig(linksArr)
+			except ValueError:
+				logger.info("Try Shadowsocks Clash Parser.")
+				pssc = ParserShadowsocksClash(self._getShadowsocksBaseConfig())
+				self._configList = pssc.parseSubsConfig(rep)
 		logger.info("Read %d node(s)" % len(self._configList))
 	
 	def readGuiConfig(self,filename):
+		logger.info("Try Shadowsocks Clash Parser.")
 		pssc = ParserShadowsocksClash(self._getShadowsocksBaseConfig())
 		cfg = pssc.parseGuiConfig(filename)
 		if (cfg == False):
 			logger.info("Not Clash Configs")
+			logger.info("Try Shadowsocks Basic or ShadowsocksD Parser.")
 			pssb = ParserShadowsocksBasic(self._getShadowsocksBaseConfig())
 			cfg = pssb.parseGuiConfig(filename)
 			if (cfg == False):

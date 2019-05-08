@@ -20,11 +20,14 @@ class SpeedTestCore(object):
 			"remarks": "N/A",
 			"loss": -1,
 			"ping": -1,
+			"gPingLoss": -1,
+			"gPing": -1,
 			"dspeed": -1,
 			"maxDSpeed": -1,
 			"trafficUsed": -1,
 			"rawSocketSpeed": [],
-			"rawTcpPingStatus": []
+			"rawTcpPingStatus": [],
+			"rawGooglePingStatus": []
 		}
 
 	def __getBaseResult(self):
@@ -52,14 +55,26 @@ class SpeedTestCore(object):
 			_item["remarks"] = config["remarks"]
 			self.__current = _item
 			config["server_port"] = int(config["server_port"])
+			self.__client.startClient(config)
+			time.sleep(1)
 			st = SpeedTest()
 			latencyTest = st.tcpPing(config["server"],config["server_port"])
 			_item["loss"] = 1 - latencyTest[1]
 			_item["ping"] = latencyTest[0]
-
+			_item["rawTcpPingStatus"] = latencyTest[2]
+			try:
+				googlePingTest = st.googlePing()
+				_item["gPing"] = googlePingTest[0]
+				_item["gPingLoss"] = 1 - googlePingTest[1]
+				_item["rawGooglePingStatus"] = googlePingTest[2]
+			except:
+				logger.exception("")
+				pass
+			self.__client.stopClient()
 			self.__results.append(_item)
 			logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000)))
 			config = self.__parser.getNextConfig()
+			time.sleep(1)
 		self.__current = {}
 
 	def fullTest(self):
@@ -96,15 +111,21 @@ class SpeedTestCore(object):
 						_item["trafficUsed"] = testRes[3]
 						_item["rawSocketSpeed"] = testRes[2]
 					except:
+						pass	
+					try:
+						googlePingTest = st.googlePing()
+						_item["gPing"] = googlePingTest[0]
+						_item["gPingLoss"] = 1 - googlePingTest[1]
+						_item["rawGooglePingStatus"] = googlePingTest[2]
+					except:
+						logger.exception("")
 						pass
 					time.sleep(1)
-
 				self.__client.stopClient()
 				time.sleep(1)
 				_item["loss"] = 1 - latencyTest[1]
 				_item["ping"] = latencyTest[0]
-			#	_item["gping"] = st.googlePing()
-				_item["gping"] = 0
+				_item["rawTcpPingStatus"] = latencyTest[2]
 				self.__results.append(_item)
 				logger.info(
 					"{} - {} - Loss:{}%% - TCP_Ping:{} - AvgSpeed:{:.2f}MB/s - MaxSpeed:{:.2f}MB/s".format(

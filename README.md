@@ -23,7 +23,9 @@ Batch speed measuring tool based on Shadowsocks(R)
 
 <font size=5 color=#FF0033>Before you publicly release your speed test results, be sure to ask the node owner if they agree to the release to avoid unnecessary disputes.</font>
 
- - SpeedTestNet is no longer supported.
+ - SpeedTestNet and Fast.com is no longer supported.
+ - MacOS has not found a suitable way to detect libsodium, so be sure to ensure that libsodium is installed before testing nodes that use encryption methods such as chacha20.
+ - Shadowsocks-libev and Simple-Obfs are recommended to be installed using a compiled installation. It is known that the Shadowsocks-libev version in the Debian repository is too low to use some new encryption methods.
 
 ## Features
 
@@ -42,6 +44,7 @@ Universal dependency
 - pysocks
 - flask
 - flask-cors
+- pyyaml
 
 Linux dependency
  - [libsodium](https://github.com/jedisct1/libsodium)
@@ -51,13 +54,12 @@ Linux dependency
 ## Platform Support
 1. Windows 10 x64
 2. Ubuntu 18.04 LTS
+3. MacOS
 
 ## Getting started
 
 ### Console Usage
-pip install -r requirements.txt
-or
-pip3 install -r requirements.txt
+pip(pip3) install -r requirements.txt
 
     python .\main.py
     Usage: main.py [options] arg1 arg2...
@@ -108,7 +110,7 @@ The parameter priority is as follows:
 > --exclude > --exclude-group > --exclude-remark
 > The above sequence indicates that node filtering will be performed in descending order of priority.
 
-### Web UI (Testing)
+### Web UI
 
     python web.py
     You can now access the WebUI through http://127.0.0.1:10870 
