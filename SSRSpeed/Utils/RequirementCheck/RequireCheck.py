@@ -70,6 +70,7 @@ class RequirementCheck(object):
 		self.__linuxCheckShadowsocks()	
 
 	def __linuxCheckLibsodium(self):
+		logger.info("Checking libsodium.")
 		if (checkPlatform() == "MacOS"):
 			logger.warn("MacOS does not support detection of libsodium, please ensure that libsodium is installed.")
 			return True

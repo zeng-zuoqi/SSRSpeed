@@ -21,7 +21,9 @@
 
 <font size=5 color=#FF0033>在您公开发布测速结果之前请务必征得节点拥有者的同意以避免一些令人烦恼的事情</font>
 
- - SpeedTestNet方式已停止支持
+ - SpeedTestNet和Fast方式已停止支持
+ - MacOS 下暂未找到合适的方式检测libsodium，所以请务必保证在测试使用chacha20等加密方式的节点前保证libsodium已安装
+ - Shadowsocks-libev 和 Simple-Obfs 推荐使用编译安装的方式进行安装，已知在Debian仓库中的Shadowsocks-libev版本过低导致无法使用一些新加密方式
 
 
 ## 特点
@@ -40,6 +42,7 @@
 - pysocks
 - flask
 - flask-cors
+- pyyaml
 
 Linux 依赖
  - [libsodium](https://github.com/jedisct1/libsodium)
@@ -49,12 +52,11 @@ Linux 依赖
 ## 已支持平台
 1. Windows 10 x64
 2. Ubuntu 18.04 LTS
+3. MacOS
 
 ## 快速上手
 ### 命令行用法
-pip install -r requirements.txt
-or
-pip3 install -r requirements.txt
+pip(pip3) install -r requirements.txt
 
     python .\main.py
     Usage: main.py [options] arg1 arg2...
@@ -103,7 +105,7 @@ pip3 install -r requirements.txt
 > --exclude > --exclude-group > --exclude-remark
 > 当以上三个参数中多于一个被使用时，参数的采用顺序如上所示，将从优先级最大的参数开始过滤。
 
-### Web UI（测试中）
+### Web UI
 
     python web.py
     此时访问 http://127.0.0.1:10870/ 可以进入Web UI
