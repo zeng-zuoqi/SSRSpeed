@@ -143,7 +143,7 @@ class ExportResult(object):
 		onlineNode = 0
 		for i in range(0,len(result)):
 			totalTraffic += result[i]["trafficUsed"] if (result[i]["trafficUsed"] > 0) else 0
-			if (result[i]["ping"] > 0 and result[i]["gPing"] > 0):
+			if ((result[i]["ping"] > 0 and result[i]["gPing"] > 0) or (result[i]["dspeed"] > 0)):
 				onlineNode += 1
 			draw.line((0,30 * i + 60,imageRightPosition,30 * i + 60),fill=(127,127,127),width=1)
 			item = result[i]
