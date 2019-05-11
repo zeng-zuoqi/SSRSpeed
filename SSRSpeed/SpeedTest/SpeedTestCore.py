@@ -100,7 +100,7 @@ class SpeedTestCore(object):
 			config["server_port"] = int(config["server_port"])
 			self.__client.startClient(config)
 			inboundInfo = self.__geoIPInbound(config)
-			_item["geoIP"]["inbound"]["address"] = inboundInfo[0]
+			_item["geoIP"]["inbound"]["address"] = "{}:{}".format(inboundInfo[0],config["server_port"])
 			_item["geoIP"]["inbound"]["info"] = inboundInfo[1]
 			time.sleep(1)
 			st = SpeedTest()
