@@ -1,6 +1,7 @@
 
 
 
+
   
 <h1 align="center">
     <br>SSRSpeed
@@ -213,8 +214,8 @@ Response (No Configs) => "no configs"
  |:-:|:-:|:-:|
  |SSR|ShadowsocksR-libev (Windows)<br>ShadowsocksR-Python (Linux and MacOS)|ShadowsocksR|
  |SSR-C#|ShadowsocksR-C# (Windows)<br>ShadowsocksR-Python (Linux and MacOS)|ShadowsocksR|
- |SS|Shadowsocks-libev (All Platform)|Shadowsocks and ShadowsocksD|
- |V2RAY|V2Ray-Core (All Platform)|V2RayN
+ |SS|Shadowsocks-libev (All Platform)|Shadowsocks \| ShadowsocksD \| Clash|
+ |V2RAY|V2Ray-Core (All Platform)|V2RayN \| Quantumult \| Clash
 
 ## Developers
 - [@ranwen](https://github.com/ranwen)

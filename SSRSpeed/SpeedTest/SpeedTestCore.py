@@ -7,6 +7,7 @@ import time
 logger = logging.getLogger("Sub")
 
 from SSRSpeed.SpeedTest.Methods.SpeedTestMethods import SpeedTest
+from SSRSpeed.Utils.IPGeo import domain2ip, IPLoc
 
 class SpeedTestCore(object):
 	def __init__(self,parser,client,method = "SOCKET"):
@@ -25,6 +26,16 @@ class SpeedTestCore(object):
 			"dspeed": -1,
 			"maxDSpeed": -1,
 			"trafficUsed": -1,
+			"geoIP":{
+				"inbound":{
+					"address": "N/A",
+					"info": "N/A"
+				},
+				"outbound":{
+					"address": "N/A",
+					"info": "N/A"
+				}
+			},
 			"rawSocketSpeed": [],
 			"rawTcpPingStatus": [],
 			"rawGooglePingStatus": []
@@ -42,6 +53,38 @@ class SpeedTestCore(object):
 	
 	def getCurrent(self):
 		return self.__current
+
+	def __geoIPInbound(self,config):
+		inboundIP = domain2ip(config["server"])
+		inboundInfo = IPLoc(inboundIP)
+		inboundGeo = "{} {}, {}".format(
+			inboundInfo.get("country","N/A"),
+			inboundInfo.get("city","Unknown City"),
+			inboundInfo.get("organization","N/A")
+		)
+		logger.info(
+			"Node inbound IP : {}, Geo : {}".format(
+				inboundIP,
+				inboundGeo
+			)
+		)
+		return (inboundIP,inboundGeo)
+
+	def __geoIPOutbound(self):
+		outboundInfo = IPLoc()
+		outboundIP = outboundInfo.get("ip","N/A")
+		outboundGeo = "{} {}, {}".format(
+			outboundInfo.get("country","N/A"),
+			outboundInfo.get("city","Unknown City"),
+			outboundInfo.get("organization","N/A")
+		)
+		logger.info(
+			"Node outbound IP : {}, Geo : {}".format(
+				outboundIP,
+				outboundGeo
+			)
+		)
+		return (outboundIP, outboundGeo)
 	
 	def tcpingOnly(self):
 		logger.info("Test mode : tcp ping only.")
@@ -56,6 +99,9 @@ class SpeedTestCore(object):
 			self.__current = _item
 			config["server_port"] = int(config["server_port"])
 			self.__client.startClient(config)
+			inboundInfo = self.__geoIPInbound(config)
+			_item["geoIP"]["inbound"]["address"] = "{}:{}".format(inboundInfo[0],config["server_port"])
+			_item["geoIP"]["inbound"]["info"] = inboundInfo[1]
 			time.sleep(1)
 			st = SpeedTest()
 			latencyTest = st.tcpPing(config["server"],config["server_port"])
@@ -67,6 +113,10 @@ class SpeedTestCore(object):
 				_item["gPing"] = googlePingTest[0]
 				_item["gPingLoss"] = 1 - googlePingTest[1]
 				_item["rawGooglePingStatus"] = googlePingTest[2]
+				if (_item["gPing"] > 0):
+					outboundInfo = self.__geoIPOutbound()
+					_item["geoIP"]["outbound"]["address"] = outboundInfo[0]
+					_item["geoIP"]["outbound"]["info"] = outboundInfo[1]
 			except:
 				logger.exception("")
 				pass
@@ -95,6 +145,9 @@ class SpeedTestCore(object):
 			curConfCount += 1
 			logger.info("Starting test for {} - {} [{}/{}]".format(_item["group"],_item["remarks"],curConfCount,totalConfCount))
 			self.__current = _item
+			inboundInfo = self.__geoIPInbound(config)
+			_item["geoIP"]["inbound"]["address"] = inboundInfo[0]
+			_item["geoIP"]["inbound"]["info"] = inboundInfo[1]
 			time.sleep(1)
 			try:
 				st = SpeedTest()
@@ -117,6 +170,10 @@ class SpeedTestCore(object):
 						_item["gPing"] = googlePingTest[0]
 						_item["gPingLoss"] = 1 - googlePingTest[1]
 						_item["rawGooglePingStatus"] = googlePingTest[2]
+						if (_item["gPing"] > 0):
+							outboundInfo = self.__geoIPOutbound()
+							_item["geoIP"]["outbound"]["address"] = outboundInfo[0]
+							_item["geoIP"]["outbound"]["info"] = outboundInfo[1]
 					except:
 						logger.exception("")
 						pass
