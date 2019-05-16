@@ -141,6 +141,7 @@ class BaseParser(object):
 			cfg = self._parseLink(link)
 			if (cfg):
 			#	print(cfg["remarks"])
+				cfg["remarks"] = "[" + str(cfg["group"]) + "] [" + str(cfg["server_port"]) + "] " + str(cfg["remarks"])
 				self._configList.append(cfg)
 		logger.info("Read %d node(s)" % len(self._configList))
 			
