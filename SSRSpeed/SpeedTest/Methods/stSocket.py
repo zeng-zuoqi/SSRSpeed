@@ -20,6 +20,7 @@ consoleHandler.setFormatter(formatter)
 logger.addHandler(consoleHandler)
 """
 
+from SSRSpeed.Utils.IPGeo import parseLocation
 from config import config
 
 MAX_THREAD = config["speedtestsocket"]["maxThread"]
@@ -39,23 +40,6 @@ def setProxyPort(port):
 def restoreSocket():
 	socket.socket = DEFAULT_SOCKET
 
-def parseLocation():
-	try:
-		logger.info("Starting parse location.")
-		rep = requests.get("https://api.ip.sb/geoip",proxies = {
-			"http":"socks5h://127.0.0.1:%d" % LOCAL_PORT,
-			"https":"socks5h://127.0.0.1:%d" % LOCAL_PORT
-		},timeout=5)
-		tmp = rep.json()
-		logger.info("Server Country Code : %s,Continent Code : %s,ISP : %s" % (tmp["country_code"],tmp["continent_code"],tmp["organization"]))
-		return (True,tmp["country_code"],tmp["continent_code"],tmp["organization"])
-	except:
-		logger.exception("Parse location failed.")
-		try:
-			logger.error(rep.content)
-		except:
-			pass
-	return(False,"DEFAULT","DEFAULT","DEFAULT")
 
 def speedTestThread(link):
 	global TOTAL_RECEIVED,MAX_TIME

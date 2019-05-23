@@ -55,32 +55,19 @@ class ExportResult(object):
 			self.__exportAsJson(result)
 		sorter = Sorter()
 		result = sorter.sortResult(result,sortMethod)
-		if (split > 0):
-			i = 0
-			id = 1
-			while (i < len(result)):
-				_list = []
-				for j in range(0,split):
-					_list.append(result[i])
-					i += 1
-					if (i >= len(result)):
-						break
-				self.__exportAsPng(_list,id)
-				id += 1
-		else:
-			self.__exportAsPng(result)
+		self.__exportAsPng(result)
 
-	def __getMaxWeight(self,result):
+	def __getMaxWidth(self,result):
 		font = self.__font
 		draw = ImageDraw.Draw(Image.new("RGB",(1,1),(255,255,255)))
-		maxGroupWeight = 0
-		maxRemarkWeight = 0
+		maxGroupWidth = 0
+		maxRemarkWidth = 0
 		for item in result:
 			group = item["group"]
 			remark = item["remarks"]
-			maxGroupWeight = max(maxGroupWeight,draw.textsize(group,font=font)[0])
-			maxRemarkWeight = max(maxRemarkWeight,draw.textsize(remark,font=font)[0])
-		return (maxGroupWeight + 10,maxRemarkWeight + 10)
+			maxGroupWidth = max(maxGroupWidth,draw.textsize(group,font=font)[0])
+			maxRemarkWidth = max(maxRemarkWidth,draw.textsize(remark,font=font)[0])
+		return (maxGroupWidth + 10,maxRemarkWidth + 10)
 
 	def __deweighting(self,result):
 		_result = []
@@ -99,35 +86,35 @@ class ExportResult(object):
 				_result.append(r)
 		return _result
 
-	def __exportAsPng(self,result,id=0):
+	def __exportAsPng(self,result):
 		if (self.__colorSpeedList == []):
 			self.setColors()
 		# result = self.__deweighting(result)
 		resultFont = self.__font
 		generatedTime = time.localtime()
 		imageHeight = len(result) * 30 + 30 
-		weight = self.__getMaxWeight(result)
-		groupWeight = weight[0]
-		remarkWeight = weight[1]
-		if (groupWeight < 60):
-			groupWeight = 60
-		if (remarkWeight < 60):
-			remarkWeight = 90
-		otherWeight = 100
+		weight = self.__getMaxWidth(result)
+		groupWidth = weight[0]
+		remarkWidth = weight[1]
+		if (groupWidth < 60):
+			groupWidth = 60
+		if (remarkWidth < 60):
+			remarkWidth = 90
+		otherWidth = 100
 	
-		groupRightPosition = groupWeight
-		remarkRightPosition = groupRightPosition + remarkWeight
-		lossRightPosition = remarkRightPosition + otherWeight
-		tcpPingRightPosition = lossRightPosition + otherWeight
-		dspeedRightPosition = tcpPingRightPosition + otherWeight
-		maxDSpeedRightPosition = dspeedRightPosition + otherWeight
+		groupRightPosition = groupWidth
+		remarkRightPosition = groupRightPosition + remarkWidth
+		lossRightPosition = remarkRightPosition + otherWidth
+		tcpPingRightPosition = lossRightPosition + otherWidth
+		dspeedRightPosition = tcpPingRightPosition + otherWidth
+		maxDSpeedRightPosition = dspeedRightPosition + otherWidth
 
 		if (not self.hideMaxSpeed):
 			imageRightPosition = maxDSpeedRightPosition
 		else:
 			imageRightPosition = dspeedRightPosition
 
-		newImageHeight = imageHeight + 30 * 2
+		newImageHeight = imageHeight + 30 * 3
 		resultImg = Image.new("RGB",(imageRightPosition,newImageHeight),(255,255,255))
 		draw = ImageDraw.Draw(resultImg)
 
@@ -153,8 +140,11 @@ class ExportResult(object):
 		draw.line((0,30,imageRightPosition - 1,30),fill=(127,127,127),width=1)
 
 		totalTraffic = 0
+		onlineNode = 0
 		for i in range(0,len(result)):
 			totalTraffic += result[i]["trafficUsed"] if (result[i]["trafficUsed"] > 0) else 0
+			if ((result[i]["ping"] > 0 and result[i]["gPing"] > 0) or (result[i]["dspeed"] > 0)):
+				onlineNode += 1
 			draw.line((0,30 * i + 60,imageRightPosition,30 * i + 60),fill=(127,127,127),width=1)
 			item = result[i]
 
@@ -189,44 +179,39 @@ class ExportResult(object):
 			trafficUsed = "N/A"
 		else:
 			trafficUsed = self.__parseTraffic(totalTraffic)
-		if (id > 0):
-			draw.text((5,imageHeight + 4),
-				"Traffic used : {}. Generated at {} - {} By SSRSpeed {}.".format(
-					trafficUsed,
-					time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),
-					id,
-					config["VERSION"]
-				),
-				font=resultFont,
-				fill=(0,0,0)
-			)
-			draw.line((0,newImageHeight - 1,imageRightPosition,newImageHeight - 1),fill=(127,127,127),width=1)
-			filename = "./results/" + time.strftime("%Y-%m-%d-%H-%M-%S", generatedTime) + "-%d.png" % id
-			resultImg.save(filename)
-			files.append(filename)
-			logger.info("Result image saved as %s" % filename)
-		else:
-			draw.text((5,imageHeight + 4),
-				"Generated at {}".format(
-					time.strftime("%Y-%m-%d %H:%M:%S", generatedTime),
-				),
-				font=resultFont,
-				fill=(0,0,0)
-			)
-			draw.line((0,newImageHeight - 30 - 1,imageRightPosition,newImageHeight - 30 - 1),fill=(127,127,127),width=1)
-			draw.text((5,imageHeight + 30 + 4),
-				"Traffic used : {}. By SSRSpeed {}.".format(
-					trafficUsed,
-					config["VERSION"]
-				),
-				font=resultFont,
-				fill=(0,0,0)
-			)
-			draw.line((0,newImageHeight - 1,imageRightPosition,newImageHeight - 1),fill=(127,127,127),width=1)
-			filename = "./results/" + time.strftime("%Y-%m-%d-%H-%M-%S", generatedTime) + ".png"
-			resultImg.save(filename)
-			files.append(filename)
-			logger.info("Result image saved as %s" % filename)
+
+		draw.text((5,imageHeight + 4),
+			"Traffic used : {}. Online Node(s) : [{}/{}]".format(
+				trafficUsed,
+				onlineNode,
+				len(result)
+			),
+			font=resultFont,
+			fill=(0,0,0)
+		)
+		draw.line((0,newImageHeight - 30 * 2 - 1,imageRightPosition,newImageHeight - 30 * 2 - 1),fill=(127,127,127),width=1)
+		draw.text((5,imageHeight + 30 + 4),
+			"Generated at {}".format(
+				time.strftime("%Y-%m-%d %H:%M:%S", generatedTime)
+			),
+			font=resultFont,
+			fill=(0,0,0)
+		)
+		draw.line((0,newImageHeight - 30 - 1,imageRightPosition,newImageHeight - 30 - 1),fill=(127,127,127),width=1)
+		draw.text((5,imageHeight + 30 * 2 + 4),
+			"By SSRSpeed {}.".format(
+				config["VERSION"]
+			),
+			font=resultFont,
+			fill=(0,0,0)
+		)
+		
+		draw.line((0,newImageHeight - 1,imageRightPosition,newImageHeight - 1),fill=(127,127,127),width=1)
+		filename = "./results/" + time.strftime("%Y-%m-%d-%H-%M-%S", generatedTime) + ".png"
+		resultImg.save(filename)
+		files.append(filename)
+		logger.info("Result image saved as %s" % filename)
+		
 		for _file in files:
 			if (not self.__config["uploadResult"]):
 				break

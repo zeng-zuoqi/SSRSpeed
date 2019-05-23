@@ -70,6 +70,10 @@ class RequirementCheck(object):
 		self.__linuxCheckShadowsocks()	
 
 	def __linuxCheckLibsodium(self):
+		logger.info("Checking libsodium.")
+		if (checkPlatform() == "MacOS"):
+			logger.warn("MacOS does not support detection of libsodium, please ensure that libsodium is installed.")
+			return True
 		try:
 			process = subprocess.Popen("ldconfig -p | grep libsodium",shell=True,stdout=subprocess.PIPE)
 			try:
