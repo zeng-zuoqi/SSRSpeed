@@ -15,15 +15,7 @@ class ParserShadowsocksClash(object):
 	def __getShadowsocksBaseConfig(self):
 		return copy.deepcopy(self.__baseConfig)
 
-	def parseGuiConfig(self,filename):
-		with open(filename,"r+",encoding="utf-8") as f:
-			try:
-				clashCfg = yaml.load(f,Loader=yaml.FullLoader)
-			except:
-				logger.exception("Not Clash config.")
-				f.close()
-				return False
-			f.close()
+	def __parseConfig(self,clashCfg):
 		for cfg in clashCfg["Proxy"]:
 			if (cfg.get("type","N/A").lower() != "ss"):
 				logger.info("Config {}, type {} not support.".format(
@@ -64,6 +56,31 @@ class ParserShadowsocksClash(object):
 			len(self.__configList)
 			)
 		)
+
+	def parseSubsConfig(self,config):
+		try:
+			clashCfg = yaml.load(config,Loader=yaml.FullLoader)
+		except:
+			logger.exception("Not Clash Subscription.")
+			return False
+
+		self.__parseConfig(clashCfg)
+		logger.debug("Read {} configs.".format(
+			len(self.__configList)
+			)
+		)
+		return self.__configList
+
+	def parseGuiConfig(self,filename):
+		with open(filename,"r+",encoding="utf-8") as f:
+			try:
+				clashCfg = yaml.load(f,Loader=yaml.FullLoader)
+			except:
+				logger.exception("Not Clash config.")
+				f.close()
+				return False
+			f.close()
+
 		return self.__configList
 
 

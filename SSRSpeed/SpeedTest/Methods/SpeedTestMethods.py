@@ -79,7 +79,7 @@ class SpeedTest(object):
 
 	def googlePing(self):
 		logger.info("Testing latency to google.")
-		return cachefly.pinggoogletest(LOCAL_PORT)
+		return cachefly.pinggoogletest(LOCAL_ADDRESS,LOCAL_PORT)
 
 	def tcpPing(self,server,port):
 		logger.info("Testing latency to server.")
