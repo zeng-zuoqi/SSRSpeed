@@ -2,6 +2,7 @@
 
 
 
+
   
 <h1 align="center">
     <br>SSRSpeed
@@ -111,6 +112,10 @@ pip(pip3) install -r requirements.txt
     python web.py
     此时访问 http://127.0.0.1:10870/ 可以进入Web UI
 
+## 修改Socket模式的测速源
+ - 仅需修改Tag为 "Default" 和Tag为 "Google" 的对象中的 **link**, **size**属性，其中 "link" 为下载源，"size" 为该下载源对应的文件大小(MBytes)
+ - 更加高级的用法请参考下面的 [高级用法]
+
 ## 高级用法
  - **规则**
    - 程序拥有内置的规则匹配模式通过自定义规则匹配特定ISP或者特定地区的节点使用特定的下载测速源，规则已内置于config.py文件中，查看它以获得更多的信息。
@@ -212,7 +217,7 @@ Response (No Configs) => "no configs"
  |V2RAY|V2Ray-Core (All Platform)|V2RayN \| Quantumult \| Clash
 
 ## 开发者
-- [@ranwen](https://github.com/ranwen)
+- <del>应该开发者本人要求已移除</del>
 
 ## 感谢
 - 新配色方案

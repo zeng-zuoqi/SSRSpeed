@@ -2,6 +2,7 @@
 
 
 
+
   
 <h1 align="center">
     <br>SSRSpeed
@@ -116,6 +117,10 @@ The parameter priority is as follows:
     python web.py
     You can now access the WebUI through http://127.0.0.1:10870 
 
+## Modify the speed source of Socket mode
+  -  Just modify the **link**, **size** attribute in the object with the tag "Default" and the tag "Google", where "link" is the download source and "size" is the file corresponding to the download source. Size (MBytes)
+  - For more advanced usage, please refer to the following [Advanced Usage]
+
 ## Advanced Usage
 
  - **Rules**
@@ -218,7 +223,7 @@ Response (No Configs) => "no configs"
  |V2RAY|V2Ray-Core (All Platform)|V2RayN \| Quantumult \| Clash
 
 ## Developers
-- [@ranwen](https://github.com/ranwen)
+- <del>Removed as requested by the developer</del>
 
 ## Acknowledgement
  - New color scheme
