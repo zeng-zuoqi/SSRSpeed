@@ -99,9 +99,9 @@ pip(pip3) install -r requirements.txt
 
 
 Example usage :
-- python main.py -c gui-config.json --include 韩国 --include-remark Azure --include-group MoCloudPlus
-- python main.py -u https://mocloudplus.com/link/ABCDEFG123456?mu=0 --include 香港 Azure --include-group MoCloudPlus --exclude HKT HKBN
-- python main.py -u https://mocloudplus.com/link/ABCDEFG123456?mu=0 -t ss
+- python main.py -c gui-config.json --include 韩国 --include-remark Azure --include-group YoYu
+- python main.py -u https://my.yoyutrans.com/subscriptionlink --include 香港 Azure --include-group YoYu --exclude Azure
+- python main.py -u https://my.yoyutrans.com/subscriptionlink -t ss
 
 The parameter priority is as follows:
 
