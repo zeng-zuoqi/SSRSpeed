@@ -108,18 +108,20 @@ class SpeedTestCore(object):
 			_item["loss"] = 1 - latencyTest[1]
 			_item["ping"] = latencyTest[0]
 			_item["rawTcpPingStatus"] = latencyTest[2]
-			try:
-				googlePingTest = st.googlePing()
-				_item["gPing"] = googlePingTest[0]
-				_item["gPingLoss"] = 1 - googlePingTest[1]
-				_item["rawGooglePingStatus"] = googlePingTest[2]
-				if (_item["gPing"] > 0):
-					outboundInfo = self.__geoIPOutbound()
-					_item["geoIP"]["outbound"]["address"] = outboundInfo[0]
-					_item["geoIP"]["outbound"]["info"] = outboundInfo[1]
-			except:
-				logger.exception("")
-				pass
+			logger.debug(latencyTest)
+			if (latencyTest[0] > 0):
+				try:
+					googlePingTest = st.googlePing()
+					_item["gPing"] = googlePingTest[0]
+					_item["gPingLoss"] = 1 - googlePingTest[1]
+					_item["rawGooglePingStatus"] = googlePingTest[2]
+					if (_item["gPing"] > 0):
+						outboundInfo = self.__geoIPOutbound()
+						_item["geoIP"]["outbound"]["address"] = outboundInfo[0]
+						_item["geoIP"]["outbound"]["info"] = outboundInfo[1]
+				except:
+					logger.exception("")
+					pass
 			self.__client.stopClient()
 			self.__results.append(_item)
 			logger.info("%s - %s - Loss:%s%% - TCP_Ping:%d" % (_item["group"],_item["remarks"],_item["loss"] * 100,int(_item["ping"] * 1000)))
@@ -152,7 +154,7 @@ class SpeedTestCore(object):
 			try:
 				st = SpeedTest()
 				latencyTest = st.tcpPing(config["server"],config["server_port"])
-				if (int(latencyTest[0] * 1000) != 0):
+				if (latencyTest[0] > 0):
 					time.sleep(1)
 					testRes = st.startTest(self.__testMethod)
 					if (int(testRes[0]) == 0):

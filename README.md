@@ -2,6 +2,7 @@
 
 
 
+
   
 <h1 align="center">
     <br>SSRSpeed
@@ -98,9 +99,9 @@ pip(pip3) install -r requirements.txt
 
 
 Example usage :
-- python main.py -c gui-config.json --include 韩国 --include-remark Azure --include-group MoCloudPlus
-- python main.py -u https://mocloudplus.com/link/ABCDEFG123456?mu=0 --include 香港 Azure --include-group MoCloudPlus --exclude HKT HKBN
-- python main.py -u https://mocloudplus.com/link/ABCDEFG123456?mu=0 -t ss
+- python main.py -c gui-config.json --include 韩国 --include-remark Azure --include-group YoYu
+- python main.py -u https://my.yoyutrans.com/subscriptionlink --include 香港 Azure --include-group YoYu --exclude Azure
+- python main.py -u https://my.yoyutrans.com/subscriptionlink -t ss
 
 The parameter priority is as follows:
 
@@ -115,6 +116,10 @@ The parameter priority is as follows:
 
     python web.py
     You can now access the WebUI through http://127.0.0.1:10870 
+
+## Modify the speed source of Socket mode
+  -  Just modify the **link**, **size** attribute in the object with the tag "Default" and the tag "Google", where "link" is the download source and "size" is the file corresponding to the download source. Size (MBytes)
+  - For more advanced usage, please refer to the following [Advanced Usage]
 
 ## Advanced Usage
 
@@ -218,7 +223,7 @@ Response (No Configs) => "no configs"
  |V2RAY|V2Ray-Core (All Platform)|V2RayN \| Quantumult \| Clash
 
 ## Developers
-- [@ranwen](https://github.com/ranwen)
+- <del>Removed as requested by the developer</del>
 
 ## Acknowledgement
  - New color scheme
