@@ -103,5 +103,11 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-results
+# vscode
+.vscode
+
+# ssrspeed logs and results
+/logs
+
+/results
 .idea
